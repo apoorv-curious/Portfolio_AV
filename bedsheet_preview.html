@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bedsheet — The Game</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=Sora:wght@300;400;500;600&family=Noto+Sans+Devanagari:wght@400;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --wood:        #2C1810;
+  --wood-mid:    #3D2B1F;
+  --wood-light:  #5C3D2A;
+  --felt:        #1B4332;
+  --felt-mid:    #2D6A4F;
+  --felt-light:  #386641;
+  --gold:        #C9963A;
+  --gold-light:  #E8C06A;
+  --cream:       #F5EDD8;
+  --card-bg:     #FAF3E4;
+  --card-shadow: rgba(0,0,0,0.5);
+  --p1-orange:   #E07B30;
+  --p1-tile:     #F0A855;
+  --p1-light:    #FDE8C8;
+  --p2-blue:     #2A6EA6;
+  --p2-tile:     #6AAED6;
+  --p2-light:    #C8E4F6;
+  --p3-green:    #2E8B57;
+  --p3-tile:     #6EC89A;
+  --p3-light:    #C0EDD4;
+  --p4-purple:   #7B3FA0;
+  --p4-tile:     #B07DD4;
+  --p4-light:    #E4D0F5;
+  --sticker-brown:#7B3300;
+  --sticker-grey: #888;
+  --sticker-blue: #2A6EA6;
+  --sticker-black:#111;
+  --tok-w:       #2A6EA6;
+  --tok-i:       #666;
+  --tok-r:       #2E8B57;
+  --tooltip-bg:  #0D1F17;
+  --glow:        rgba(201,150,58,0.4);
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:var(--wood);
+  font-family:'Sora',sans-serif;
+  color:var(--cream);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* ───────── NOISE TEXTURE OVERLAY ───────── */
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;
+}
+
+/* ───────── HERO ───────── */
+.hero{
+  text-align:center;
+  padding:48px 20px 32px;
+  position:relative;z-index:1;
+}
+.hero-eyebrow{
+  font-family:'Sora',sans-serif;
+  font-size:11px;font-weight:600;
+  letter-spacing:4px;text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:14px;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(52px,8vw,96px);
+  font-weight:900;
+  line-height:0.9;
+  color:var(--cream);
+  text-shadow:0 4px 30px rgba(0,0,0,0.5);
+  margin-bottom:16px;
+}
+.hero-title span{
+  color:var(--gold);
+  font-style:italic;
+}
+.hero-tagline{
+  font-size:16px;font-weight:300;
+  color:rgba(245,237,216,0.7);
+  max-width:480px;margin:0 auto 24px;
+  line-height:1.6;
+}
+.hero-pills{
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:32px;
+}
+.pill{
+  background:rgba(201,150,58,0.15);
+  border:1px solid rgba(201,150,58,0.35);
+  color:var(--gold-light);
+  font-size:12px;font-weight:500;
+  padding:6px 16px;border-radius:20px;
+  letter-spacing:0.3px;
+}
+
+/* ───────── TOUR BAR ───────── */
+.tour-bar{
+  display:flex;gap:8px;justify-content:center;flex-wrap:wrap;
+  margin-bottom:20px;
+  position:relative;z-index:10;
+}
+.tour-btn{
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.14);
+  color:rgba(245,237,216,0.65);
+  font-family:'Sora',sans-serif;
+  font-size:12px;font-weight:500;
+  padding:7px 16px;border-radius:20px;
+  cursor:pointer;transition:all 0.22s;
+  letter-spacing:0.3px;
+}
+.tour-btn:hover{
+  background:rgba(201,150,58,0.18);
+  border-color:var(--gold);
+  color:var(--gold-light);
+}
+.tour-btn.active{
+  background:var(--gold);
+  border-color:var(--gold);
+  color:#1A0E06;font-weight:600;
+}
+
+/* ───────── TABLE WRAPPER ───────── */
+.table-scene{
+  perspective:1200px;
+  padding:0 16px 12px;
+  position:relative;z-index:1;
+}
+.table{
+  background:var(--felt);
+  border-radius:28px;
+  border:6px solid var(--wood-light);
+  box-shadow:
+    0 0 0 2px var(--wood),
+    0 0 0 4px rgba(201,150,58,0.15),
+    0 30px 80px rgba(0,0,0,0.7),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  padding:24px;
+  max-width:1040px;
+  margin:0 auto;
+  transform:rotateX(8deg);
+  transform-origin:50% 0;
+  transition:transform 0.4s ease;
+  position:relative;
+  background-image:
+    radial-gradient(ellipse at 30% 20%, rgba(56,102,65,0.4) 0%, transparent 60%),
+    radial-gradient(ellipse at 70% 80%, rgba(27,67,50,0.6) 0%, transparent 60%);
+}
+.table:hover{transform:rotateX(2deg);}
+
+/* ───────── LAYOUT ───────── */
+.table-layout{
+  display:grid;
+  grid-template-columns:1fr 300px 1fr;
+  grid-template-rows:auto auto auto;
+  gap:16px;
+  align-items:center;
+  justify-items:center;
+}
+
+/* ───────── PLAYER SECTION ───────── */
+.player-section{
+  display:flex;flex-direction:column;
+  align-items:center;gap:8px;
+  position:relative;
+}
+.player-name{
+  font-size:10px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:3px 12px;border-radius:20px;
+  border:1px solid currentColor;
+}
+
+/* ───────── BOARD ───────── */
+.board{
+  border-radius:10px;
+  padding:7px;
+  position:relative;
+  transition:all 0.3s;
+  cursor:pointer;
+}
+.board:hover{
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(0,0,0,0.5);
+}
+.board-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:3px;
+  border-radius:6px;
+  overflow:visible;
+}
+
+/* ───────── TILE ───────── */
+.tile{
+  border-radius:4px;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform 0.15s;
+  cursor:pointer;
+}
+.tile:hover{transform:scale(1.12);z-index:5;}
+.tile.empty{
+  background:rgba(0,0,0,0.28);
+  border:1px dashed rgba(255,255,255,0.07);
+}
+.tile.placed{border:none;}
+.tile.placed:hover{box-shadow:0 3px 12px rgba(0,0,0,0.4);}
+.sticker{
+  position:absolute;top:2px;right:2px;
+  width:7px;height:7px;
+  border-radius:50%;
+  box-shadow:0 1px 3px rgba(0,0,0,0.4);
+}
+
+/* ───────── ACCESSORIES ROW ───────── */
+.accessories{
+  display:flex;gap:6px;align-items:center;
+  flex-wrap:wrap;justify-content:center;
+}
+
+/* ───────── WIN STRIP ───────── */
+.win-strip{
+  background:var(--card-bg);
+  border-radius:5px;
+  padding:5px 8px;
+  font-family:'Sora',sans-serif;
+  font-size:9px;font-weight:600;
+  color:#1A0E06;
+  display:flex;align-items:center;gap:4px;
+  cursor:pointer;
+  border:1.5px solid #D4C4A0;
+  transition:all 0.2s;
+  white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,0.3);
+  position:relative;
+}
+.win-strip:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.4);}
+.win-strip.hidden::after{
+  content:'🔒';font-size:9px;
+  position:absolute;right:4px;top:50%;transform:translateY(-50%);
+}
+.win-strip.revealed{
+  border-color:var(--gold);
+  background:#FFF8E6;
+}
+.win-strip.revealed::after{
+  content:'✓';font-size:9px;color:var(--gold);
+  position:absolute;right:4px;top:50%;transform:translateY(-50%);
+  font-weight:700;
+}
+.strip-dot{
+  width:8px;height:8px;border-radius:50%;flex-shrink:0;
+}
+
+/* ───────── TOKENS ───────── */
+.token-row{display:flex;gap:4px;}
+.tok{
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:#fff;
+  cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.2);
+  transition:transform 0.15s;
+  flex-shrink:0;
+}
+.tok:hover{transform:scale(1.2);}
+.tok.w{background:var(--tok-w);}
+.tok.i{background:var(--tok-i);}
+.tok.r{background:var(--tok-r);}
+.tok.empty{background:rgba(255,255,255,0.1);border:1px dashed rgba(255,255,255,0.2);color:rgba(255,255,255,0.3);}
+
+/* ───────── PET BADGE ───────── */
+.pet-badge{
+  font-size:22px;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));
+  cursor:pointer;transition:transform 0.2s;
+}
+.pet-badge:hover{transform:scale(1.2) translateY(-2px);}
+
+/* ───────── CARDS IN HAND ───────── */
+.hand-area{
+  display:flex;gap:6px;
+  margin-bottom:4px;
+}
+.hand-card{
+  width:56px;height:80px;
+  border-radius:7px;
+  background:var(--card-bg);
+  border:1.5px solid #C8B090;
+  cursor:pointer;
+  transition:all 0.2s;
+  position:relative;
+  box-shadow:0 4px 14px rgba(0,0,0,0.45);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:space-between;
+  padding:5px 4px 4px;
+  overflow:hidden;
+}
+.hand-card:hover{
+  transform:translateY(-12px) rotate(-2deg);
+  z-index:20;
+  box-shadow:0 14px 30px rgba(0,0,0,0.55);
+}
+.hand-card:nth-child(2):hover{transform:translateY(-12px) rotate(1deg);}
+.hand-card:nth-child(3):hover{transform:translateY(-12px) rotate(-1deg);}
+.hand-card:nth-child(4):hover{transform:translateY(-12px) rotate(2deg);}
+.card-type-band{
+  width:100%;
+  border-radius:3px;
+  padding:2px 3px;
+  font-size:7.5px;font-weight:700;
+  text-align:center;letter-spacing:0.3px;
+  text-transform:uppercase;
+  color:#fff;
+}
+.card-name{
+  font-size:8px;font-weight:600;
+  color:#1A0E06;text-align:center;
+  line-height:1.3;
+  padding:0 1px;
+  font-family:'Sora',sans-serif;
+}
+.card-icon{font-size:18px;line-height:1;}
+.card-desc-tiny{
+  font-size:7px;color:#5A3A1A;
+  text-align:center;line-height:1.3;
+}
+
+/* ───────── CENTRE ───────── */
+.centre-area{
+  display:flex;flex-direction:column;
+  align-items:center;gap:10px;
+}
+.centre-label{
+  font-size:9px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;
+  color:rgba(245,237,216,0.35);
+  text-align:center;
+}
+
+/* ───────── CARD PILE ───────── */
+.pile-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  cursor:pointer;transition:transform 0.2s;
+}
+.pile-wrap:hover{transform:scale(1.06);}
+.pile{
+  width:50px;height:72px;
+  border-radius:7px;border:1.5px solid rgba(255,255,255,0.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.5);
+  position:relative;
+}
+.pile::before,.pile::after{
+  content:'';position:absolute;
+  width:100%;height:100%;
+  border-radius:7px;border:1.5px solid rgba(255,255,255,0.07);
+}
+.pile::before{top:3px;left:-3px;z-index:-1;}
+.pile::after{top:6px;left:-6px;z-index:-2;}
+.pile-action{background:#1E3A5F;}
+.pile-action::before{background:#183050;}
+.pile-action::after{background:#122540;}
+.pile-pet{background:#2D1B4E;}
+.pile-pet::before{background:#241442;}
+.pile-pet::after{background:#1B0E35;}
+.pile-label{font-size:9px;text-align:center;color:rgba(245,237,216,0.4);font-weight:500;}
+.pile-count{
+  position:absolute;top:-7px;right:-7px;
+  background:var(--gold);color:#1A0E06;
+  font-size:9px;font-weight:700;
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+}
+
+/* ───────── TOKEN BANK ───────── */
+.token-bank{
+  background:rgba(0,0,0,0.3);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:12px;
+  padding:10px 12px;
+  cursor:pointer;transition:all 0.2s;
+}
+.token-bank:hover{background:rgba(0,0,0,0.45);}
+.bank-row{display:flex;gap:4px;align-items:center;margin-bottom:5px;}
+.bank-row:last-child{margin-bottom:0;}
+.bank-tok{
+  width:24px;height:24px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:700;color:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,0.35),inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.bank-tok.w{background:var(--tok-w);}
+.bank-tok.i{background:var(--tok-i);}
+.bank-tok.r{background:var(--tok-r);}
+.bank-label{font-size:9px;color:rgba(245,237,216,0.35);margin-left:4px;}
+
+/* ───────── DICE ───────── */
+.dice-wrap{cursor:pointer;transition:transform 0.25s;}
+.dice-wrap:hover{transform:rotate(25deg) scale(1.15);}
+.dice{
+  width:44px;height:44px;
+  background:var(--cream);
+  border-radius:10px;
+  border:2px solid #C8B090;
+  display:flex;align-items:center;justify-content:center;
+  font-size:24px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* ───────── STRIP DECKS ───────── */
+.strip-decks{
+  display:flex;gap:6px;
+}
+.strip-deck{
+  background:var(--card-bg);
+  border-radius:5px;
+  padding:5px 7px;
+  font-size:9px;font-weight:600;
+  color:#1A0E06;
+  border:1.5px solid #C8B090;
+  cursor:pointer;transition:all 0.2s;
+  text-align:center;
+  box-shadow:2px 2px 0 #C8B090;
+}
+.strip-deck:hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 #C8B090;}
+
+/* ───────── PET POOL ───────── */
+.pet-pool{
+  background:rgba(0,0,0,0.2);
+  border:1px solid rgba(255,255,255,0.07);
+  border-radius:10px;
+  padding:8px 10px;
+  display:flex;gap:5px;flex-wrap:wrap;
+  justify-content:center;cursor:pointer;
+}
+
+/* ───────── OPPOSING BOARDS (compact) ───────── */
+.opp-row{
+  display:flex;gap:12px;
+  align-items:flex-end;
+}
+
+/* ───────── TOOLTIP ───────── */
+.tooltip{
+  position:fixed;
+  background:var(--tooltip-bg);
+  border:1px solid rgba(201,150,58,0.35);
+  border-radius:14px;
+  padding:14px 18px;
+  max-width:270px;min-width:180px;
+  z-index:9999;
+  pointer-events:none;
+  opacity:0;transform:translateY(8px) scale(0.97);
+  transition:opacity 0.18s,transform 0.18s;
+  box-shadow:0 12px 50px rgba(0,0,0,0.6);
+}
+.tooltip.visible{opacity:1;transform:translateY(0) scale(1);}
+.tt-title{
+  font-family:'Playfair Display',serif;
+  font-size:14px;font-weight:700;
+  color:var(--gold-light);
+  margin-bottom:5px;
+}
+.tt-body{
+  font-size:12px;color:rgba(245,237,216,0.7);
+  line-height:1.6;font-weight:300;
+}
+.tt-tag{
+  display:inline-block;
+  background:rgba(201,150,58,0.2);
+  color:var(--gold);
+  font-size:10px;font-weight:600;
+  padding:2px 8px;border-radius:10px;
+  margin-top:6px;letter-spacing:0.3px;
+}
+
+/* ───────── SPOTLIGHT ───────── */
+.spotlight-overlay{
+  position:fixed;inset:0;
+  background:rgba(0,0,0,0);
+  pointer-events:none;z-index:100;
+  transition:background 0.4s;
+}
+.spotlight-overlay.active{
+  background:rgba(0,0,0,0.6);
+  pointer-events:auto;
+}
+.spotlight-msg{
+  position:fixed;bottom:32px;left:50%;transform:translateX(-50%);
+  background:var(--tooltip-bg);
+  border:1px solid rgba(201,150,58,0.4);
+  border-radius:16px;
+  padding:16px 24px;
+  max-width:420px;width:90%;
+  text-align:center;
+  z-index:9999;
+  opacity:0;pointer-events:none;
+  transition:opacity 0.3s,transform 0.3s;
+  transform:translateY(20px);
+  box-shadow:0 20px 60px rgba(0,0,0,0.7);
+}
+.spotlight-msg.visible{opacity:1;pointer-events:auto;transform:translateY(0);}
+.sm-step{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.sm-title{font-family:'Playfair Display',serif;font-size:18px;font-weight:700;color:var(--cream);margin-bottom:6px;}
+.sm-body{font-size:13px;color:rgba(245,237,216,0.65);line-height:1.6;font-weight:300;}
+.sm-nav{display:flex;gap:10px;justify-content:center;margin-top:14px;}
+.sm-btn{
+  background:var(--gold);color:#1A0E06;
+  font-family:'Sora',sans-serif;font-size:13px;font-weight:600;
+  border:none;border-radius:20px;padding:8px 22px;cursor:pointer;
+  transition:background 0.2s;
+}
+.sm-btn:hover{background:var(--gold-light);}
+.sm-btn.secondary{background:rgba(255,255,255,0.1);color:var(--cream);}
+.sm-btn.secondary:hover{background:rgba(255,255,255,0.18);}
+.sm-progress{display:flex;gap:4px;justify-content:center;margin-top:10px;}
+.sm-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.2);transition:background 0.2s;}
+.sm-dot.active{background:var(--gold);}
+
+/* ───────── BOTTOM INFO ───────── */
+.bottom-info{
+  max-width:1040px;margin:20px auto 0;
+  padding:0 16px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:12px;
+  position:relative;z-index:1;
+}
+.info-card{
+  background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px;
+  padding:16px 18px;
+  transition:all 0.2s;
+  cursor:default;
+}
+.info-card:hover{background:rgba(201,150,58,0.07);border-color:rgba(201,150,58,0.25);}
+.ic-num{
+  font-family:'Playfair Display',serif;
+  font-size:32px;font-weight:700;
+  color:var(--gold);margin-bottom:4px;
+}
+.ic-label{font-size:12px;font-weight:600;color:var(--cream);margin-bottom:3px;}
+.ic-desc{font-size:11px;color:rgba(245,237,216,0.4);font-weight:300;line-height:1.5;}
+
+/* ───────── CTA ───────── */
+.cta-section{
+  text-align:center;padding:32px 20px 48px;
+  position:relative;z-index:1;
+}
+.cta-text{
+  font-size:14px;color:rgba(245,237,216,0.5);
+  margin-bottom:16px;font-weight:300;
+}
+.cta-btn{
+  background:var(--gold);color:#1A0E06;
+  font-family:'Playfair Display',serif;
+  font-size:18px;font-weight:700;
+  border:none;border-radius:30px;
+  padding:14px 40px;cursor:pointer;
+  box-shadow:0 6px 30px rgba(201,150,58,0.35);
+  transition:all 0.25s;
+  letter-spacing:0.3px;
+}
+.cta-btn:hover{
+  background:var(--gold-light);
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(201,150,58,0.5);
+}
+
+/* ───────── ANIMATIONS ───────── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
+.fade-up{animation:fadeUp 0.6s ease both;}
+.fade-up-2{animation:fadeUp 0.6s 0.15s ease both;}
+.fade-up-3{animation:fadeUp 0.6s 0.3s ease both;}
+.glow-pulse{animation:pulse 2.5s ease-in-out infinite;}
+
+/* ───────── OPPONENT LABELS ───────── */
+.opp-label{
+  font-size:9px;font-weight:600;
+  letter-spacing:1.5px;text-transform:uppercase;
+  text-align:center;
+  margin-bottom:4px;
+}
+
+/* ───────── RESPONSIVE ───────── */
+@media(max-width:680px){
+  .table-layout{grid-template-columns:1fr 200px 1fr;}
+  .hand-card{width:44px;height:64px;}
+  .bottom-info{grid-template-columns:1fr;}
+  .table{transform:none;}
+  .table:hover{transform:none;}
+}
+
+/* ───────── SIDE LABELS ───────── */
+.side-player{
+  display:flex;align-items:center;gap:8px;
+}
+.side-label-text{
+  writing-mode:vertical-rl;
+  font-size:9px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;
+  opacity:0.4;
+}
+</style>
+</head>
+<body>
+
+<!-- TOOLTIP -->
+<div class="tooltip" id="tooltip">
+  <div class="tt-title" id="tt-title"></div>
+  <div class="tt-body" id="tt-body"></div>
+  <div class="tt-tag" id="tt-tag"></div>
+</div>
+
+<!-- SPOTLIGHT OVERLAY -->
+<div class="spotlight-overlay" id="spotlightOverlay" onclick="endTour()"></div>
+<div class="spotlight-msg" id="spotlightMsg">
+  <div class="sm-step" id="sm-step"></div>
+  <div class="sm-title" id="sm-title"></div>
+  <div class="sm-body" id="sm-body"></div>
+  <div class="sm-nav">
+    <button class="sm-btn secondary" onclick="prevTourStep()">← Back</button>
+    <button class="sm-btn" id="sm-next-btn" onclick="nextTourStep()">Next →</button>
+  </div>
+  <div class="sm-progress" id="sm-progress"></div>
+</div>
+
+<!-- HERO -->
+<div class="hero fade-up">
+  <div class="hero-eyebrow">Unfriendly Games presents</div>
+  <div class="hero-title">Bed<span>sheet</span></div>
+  <div class="hero-tagline">
+    A 3–4 player social strategy game about spreading your bedsheet — clean, complete, and in the secret shape you chose. Everyone else is trying to ruin it.
+  </div>
+  <div class="hero-pills">
+    <span class="pill">3–4 Players</span>
+    <span class="pill">45–90 Minutes</span>
+    <span class="pill">Secret Objectives</span>
+    <span class="pill">Desi Chaos</span>
+    <span class="pill">343 Combinations</span>
+  </div>
+</div>
+
+<!-- TOUR BAR -->
+<div class="tour-bar fade-up-2">
+  <button class="tour-btn active" onclick="setPhase('mid',this)">Mid Game View</button>
+  <button class="tour-btn" onclick="setPhase('start',this)">Game Start</button>
+  <button class="tour-btn" onclick="setPhase('late',this)">Late Game</button>
+  <button class="tour-btn" id="tour-start-btn" onclick="startTour()">✦ Take the Tour</button>
+</div>
+
+<!-- TABLE -->
+<div class="table-scene fade-up-3">
+<div class="table" id="mainTable">
+<div class="table-layout">
+
+  <!-- ══ TOP — PLAYER 3 (Green) ══ -->
+  <div style="grid-column:1/4; display:flex; justify-content:center;">
+    <div class="player-section" id="zone-p3">
+      <div class="accessories" style="margin-bottom:4px;">
+        <div class="win-strip hidden" style="border-color:var(--p3-green);"
+          data-tip="Player 3's Secret Strip" data-desc="Priya hasn't revealed any strips yet. She's hiding her progress. Is she going for Plus Size? Tirchi Nazar? Nobody knows — but watch which tiles she protects." data-tag="Win Condition">
+          <div class="strip-dot" style="background:var(--p3-green)"></div>Design ?
+        </div>
+        <div class="win-strip hidden" style="border-color:var(--tok-w);"
+          data-tip="Player 3's Tiles Strip" data-desc="Priya also holds a secret Tiles strip. Watching her tile placement will give clues — is she filling a quadrant, or building toward a complete row?" data-tag="Win Condition">
+          <div class="strip-dot" style="background:var(--tok-w)"></div>Tiles ?
+        </div>
+        <div class="token-row">
+          <div class="tok w" data-tip="Wash Token (W)" data-desc="Priya has 2 Wash tokens. She's been collecting them — probably to clean a dirty tile without needing a Wash card from the deck. 2 matching tokens = 1 clean tile." data-tag="Token Economy">W</div>
+          <div class="tok w" data-tip="Wash Token (W)" data-desc="Priya has 2 Wash tokens. She's well defended against dirty cards this turn." data-tag="Token Economy">W</div>
+        </div>
+        <div class="pet-badge" data-tip="Priya's Pet — Eagle 🦅" data-desc="Eagle is Priya's assigned pet. While Eagle visits your board, you can peek the top Action card and swap it with one from your hand. Priya has strategically kept Eagle at home — she's waiting for the right moment to send it." data-tag="Pet Power">🦅</div>
+      </div>
+      <div class="opp-label" style="color:var(--p3-green)">Priya — Green</div>
+      <div class="board" id="board-p3" style="background:rgba(46,139,87,0.18);border:2px solid var(--p3-green);"
+        data-tip="Priya's Bedsheet Board" data-desc="Priya is Player 3. Her tiles are growing from the top-left corner. Notice two tiles have stickers — one dirty (brown) and one crumbled (grey). She hasn't cleaned them yet. The spreading timer is counting down..." data-tag="Player Board">
+        <div class="board-grid" id="grid-p3" style="width:170px;height:170px;"></div>
+        <!-- Dog pet visiting this board -->
+        <div style="position:absolute;top:8px;right:8px;font-size:18px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));cursor:pointer;z-index:4;"
+          data-tip="Dog 🐶 visiting Priya's board!" data-desc="Rajan sent his Dog here. While Dog is on Priya's board, any steal attempt against Priya automatically fails. But Rajan drew a 'Nashta Kha Gaya' Pet Action Card — the Dog ate Priya's tokens! She had to discard 1." data-tag="Pet Action">🐶</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ LEFT — PLAYER 4 (Purple) ══ -->
+  <div style="grid-row:2; grid-column:1; display:flex; align-items:center; gap:6px;">
+    <div class="side-label-text">Rajan</div>
+    <div class="player-section" id="zone-p4">
+      <div class="opp-label" style="color:var(--p4-purple)">Rajan — Purple</div>
+      <div class="board" id="board-p4" style="background:rgba(123,63,160,0.18);border:2px solid var(--p4-purple);"
+        data-tip="Rajan's Bedsheet Board" data-desc="Rajan is Player 4, Purple. His board is growing from the top-left. He has a permanent Burn (black) sticker on one tile — it's gone forever. No card can fix it. Rajan will have to work around that tile in his Design strip." data-tag="Player Board">
+        <div class="board-grid" id="grid-p4" style="width:160px;height:160px;"></div>
+      </div>
+      <div class="accessories">
+        <div class="win-strip hidden" style="border-color:var(--p4-purple);"
+          data-tip="Rajan's Design Strip" data-desc="Rajan's secret Design strip is still hidden. He has a permanent burn mark on his board — which rules out patterns requiring that tile to be clean. His strategy must account for this." data-tag="Win Condition">
+          <div class="strip-dot" style="background:var(--p4-purple)"></div>Design ?
+        </div>
+        <div class="tok r" data-tip="Rafu Token (R)" data-desc="Rajan has 1 Rafu token. He needs a second R to clean a tear tile without a card. He'll be watching for dice roll 2 to grab another from the bank." data-tag="Token Economy">R</div>
+        <div class="pet-badge" data-tip="Rajan's Pet — Dog 🐶 (Away)" data-desc="Rajan's Dog is currently visiting Priya's board. While away, Rajan gets no benefit from Dog. The Dog returns automatically on Rajan's next turn." data-tag="Pet Power" style="opacity:0.4;">🐶</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ CENTRE ══ -->
+  <div style="grid-row:2; grid-column:2;">
+  <div class="centre-area">
+
+    <!-- Piles row -->
+    <div style="display:flex;gap:14px;align-items:flex-end;">
+      <div class="pile-wrap"
+        data-tip="Action Card Pile — 50 Cards" data-desc="The shared Action deck. 7 card types: Poop, Stain, Crumble, Tear, Damage, Helpful, Wild. Players draw from here on the card-draw dice symbol. Reshuffled when empty — Wild cards return too." data-tag="50 Cards Total">
+        <div class="pile pile-action">🃏<div class="pile-count">34</div></div>
+        <div class="pile-label">Action Cards</div>
+      </div>
+      <div class="dice-wrap"
+        data-tip="The Dice — No Numbers!" data-desc="Every face has a carved symbol instead of numbers. Card-draw symbol appears on 2 faces for higher odds. Symbols: Draw card, Take token, Send pet, Steal, Auction." data-tag="Dice">
+        <div class="dice">🎲</div>
+        <div class="pile-label" style="margin-top:3px;">Roll each turn</div>
+      </div>
+      <div class="pile-wrap"
+        data-tip="Pet Action Card Pile — 25 Cards" data-desc="Drawn whenever any pet visits a board. Each card has 3 possible outcomes: Solo (only visiting pet), Multi-pet (others present), and Exclusion (colour + pet match). Outcomes range from gifts to absolute chaos." data-tag="25 Cards Total">
+        <div class="pile pile-pet">🐾<div class="pile-count">19</div></div>
+        <div class="pile-label">Pet Cards</div>
+      </div>
+    </div>
+
+    <!-- Token Bank -->
+    <div class="token-bank"
+      data-tip="Token Bank — Shared Supply" data-desc="W (Wash), I (Iron) and R (Rafu) tokens. Each player holds max 3 tokens total. Spend 2 matching tokens to clean 1 tile — no card needed. This is your insurance policy when you can't draw the right card." data-tag="Shared Resource">
+      <div class="centre-label" style="margin-bottom:6px;">Token Bank</div>
+      <div class="bank-row">
+        <div class="bank-tok w">W</div><div class="bank-tok w">W</div><div class="bank-tok w">W</div>
+        <span class="bank-label">×8</span>
+      </div>
+      <div class="bank-row">
+        <div class="bank-tok i">I</div><div class="bank-tok i">I</div><div class="bank-tok i">I</div>
+        <span class="bank-label">×9</span>
+      </div>
+      <div class="bank-row">
+        <div class="bank-tok r">R</div><div class="bank-tok r">R</div><div class="bank-tok r">R</div>
+        <span class="bank-label">×11</span>
+      </div>
+    </div>
+
+    <!-- Strip Decks -->
+    <div>
+      <div class="centre-label" style="margin-bottom:5px;">Win Strip Decks</div>
+      <div class="strip-decks">
+        <div class="strip-deck" data-tip="Tiles Strip Deck" data-desc="7 possible Tiles win conditions — board-state goals like 'all 4 tiles in one quadrant clean'. Each player draws 1 randomly at game start. Target: turns 10–12." data-tag="7 Strips">🟦 Tiles</div>
+        <div class="strip-deck" data-tip="Actions Strip Deck" data-desc="7 possible Actions win conditions — behaviour goals like 'steal 2 times' or 'trade in 2 auctions'. Self-tracked. Target: turns 13–15." data-tag="7 Strips">🟣 Actions</div>
+        <div class="strip-deck" data-tip="Design Strip Deck" data-desc="7 pattern strips — T-Pose, Plus Size, Tirchi Nazar, Heera, Thala for a Reason, Potty 💩 and Panja 🐾. Each is a 5×5 grid pattern of 9 clean tiles. Always mandatory. Target: turns 16–18." data-tag="7 Strips — Always Mandatory">🟩 Design</div>
+      </div>
+    </div>
+
+    <!-- Pet Pool -->
+    <div>
+      <div class="centre-label" style="margin-bottom:5px;">Pets in Play (4 of 7)</div>
+      <div class="pet-pool"
+        data-tip="Pet Token Pool" data-desc="7 pets exist — Dog, Cat, Frog, Eagle, Snake, Rabbit, Hamster. In a 4-player game, 4 are randomly assigned. The 3 faded ones are not in this game. Active pets form a circular food chain: arriving predators instantly displace their nearest prey." data-tag="Food Chain Active">
+        <span style="font-size:20px;cursor:pointer;" class="pet-badge" data-tip="Dog 🐶 — Guard Power" data-desc="Dog is Rajan's pet. Currently visiting Priya's board. Passive power: steal attempts against the host board automatically fail. In the food chain: Dog > Cat." data-tag="Away — On Priya's board">🐶</span>
+        <span style="font-size:20px;cursor:pointer;" class="pet-badge" data-tip="Frog 🐸 — Hoarder Jr." data-desc="Frog is Samir's pet. Sitting at home right now. If Frog visits your board, you can draw 1 bonus token that must be used or discarded before your turn ends." data-tag="At Home">🐸</span>
+        <span style="font-size:20px;cursor:pointer;" class="pet-badge" data-tip="Eagle 🦅 — Sharp Eyes" data-desc="Eagle is Priya's pet. Currently at home. If Eagle visits your board, you peek the top Action card and may swap it with one from your hand. Powerful information advantage." data-tag="At Home">🦅</span>
+        <span style="font-size:20px;opacity:0.25;cursor:pointer;" class="pet-badge" data-tip="Cat 🐱 — Not in this game" data-desc="Cat was not randomly assigned to any player in this game. With 4 players and 7 pets, 3 always sit out. Each game a different subset creates a fresh food chain dynamic." data-tag="Not in play">🐱</span>
+        <span style="font-size:20px;opacity:0.25;cursor:pointer;" class="pet-badge" data-tip="Snake 🐍 — Not in this game" data-desc="Snake was not assigned this game. Snake's power: board owner cannot play Helpful cards (Wash/Iron/Rafu) that turn. Absence means one less offensive threat this game." data-tag="Not in play">🐍</span>
+        <span style="font-size:20px;opacity:0.25;" class="pet-badge" data-tip="Hamster 🐹 — Not in this game" data-desc="Hamster not assigned. Hamster's power: board owner discards 1 token on arrival. A nasty little creature when active." data-tag="Not in play">🐹</span>
+        <span style="font-size:20px;cursor:pointer;" class="pet-badge" data-tip="Rabbit 🐰 — Slow" data-desc="Rabbit is your pet! While Rabbit visits another board, that player places 0 tiles that turn. Strategically devastating near the end game. Rabbit is home right now — do you send it?" data-tag="YOUR Pet">🐰</span>
+      </div>
+    </div>
+
+  </div>
+  </div>
+
+  <!-- ══ RIGHT — PLAYER 2 (Blue) ══ -->
+  <div style="grid-row:2; grid-column:3; display:flex; align-items:center; gap:6px; justify-content:flex-end;">
+    <div class="player-section" id="zone-p2">
+      <div class="opp-label" style="color:var(--p2-blue)">Samir — Blue</div>
+      <div class="board" id="board-p2" style="background:rgba(42,110,166,0.18);border:2px solid var(--p2-blue);"
+        data-tip="Samir's Bedsheet Board" data-desc="Samir is Player 2. His board is the furthest along — 14 tiles placed. He already revealed his Tiles strip (Wahan wala Kona, bottom-right quadrant clean). Now everyone knows he's focused on that corner. His Design strip is still secret." data-tag="Player Board">
+        <div class="board-grid" id="grid-p2" style="width:160px;height:160px;"></div>
+      </div>
+      <div class="accessories">
+        <div class="win-strip revealed" style="border-color:var(--gold);"
+          data-tip="✓ Samir completed his Tiles Strip!" data-desc="Samir revealed 'Wahan wala Kona' — all 4 tiles in the bottom-right quadrant, clean. Now everyone knows his partial strategy. One strip down, Design still hidden." data-tag="Completed!">
+          <div class="strip-dot" style="background:var(--gold)"></div>Wahan wala Kona
+        </div>
+        <div class="win-strip hidden" style="border-color:var(--p2-blue);"
+          data-tip="Samir's Hidden Design Strip" data-desc="Samir's Design strip is still face-down. With 14 tiles placed, he's close to completing it — but which pattern? Heera? T-Pose? If you figure it out, you know exactly which tiles to dirty." data-tag="Win Condition">
+          <div class="strip-dot" style="background:var(--p2-blue)"></div>Design ?
+        </div>
+        <div class="token-row">
+          <div class="tok i" data-tip="Iron Token (I)" data-desc="Samir has 1 Iron token. He needs another I token to fix his crumbled tile without a card. Watch — he'll probably try to steal yours on his next turn." data-tag="Token Economy">I</div>
+        </div>
+        <div class="pet-badge" data-tip="Samir's Pet — Frog 🐸 (Home)" data-desc="Frog is currently at home on Samir's board. Frog's passive power is inactive when at home — it only activates on the board Frog visits. Samir is hoarding Frog for a strategic moment." data-tag="Pet Power">🐸</div>
+      </div>
+    </div>
+    <div class="side-label-text">Samir</div>
+  </div>
+
+  <!-- ══ BOTTOM — YOU (Player 1, Orange) ══ -->
+  <div style="grid-column:1/4; display:flex; justify-content:center;">
+    <div class="player-section" id="zone-p1">
+
+      <!-- YOUR HAND -->
+      <div style="display:flex;gap:16px;align-items:flex-end;margin-bottom:8px;">
+        <div>
+          <div class="centre-label" style="margin-bottom:5px;">Your Hand — 4 Cards</div>
+          <div class="hand-area" id="hand-cards">
+            <!-- Cards populated by JS -->
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start;">
+          <div class="centre-label">Your Tokens</div>
+          <div class="token-row">
+            <div class="tok w" data-tip="Your Wash Token (W)" data-desc="You have 1 Wash token. You need 2 to clean a dirty tile without a card. Your board has a dirty tile about to spread in 1 more turn — this is urgent. Can you steal a token from someone?" data-tag="Spend 2× W to clean dirty tile">W</div>
+            <div class="tok i" data-tip="Your Iron Token (I)" data-desc="You have 1 Iron token. No crumble tiles on your board right now, so this could be traded at the next Auction for a W token you desperately need." data-tag="Spend 2× I to fix crumble tile">I</div>
+            <div class="tok empty" data-tip="Empty Token Slot" data-desc="You can hold max 3 tokens total. This slot is empty — you have room to pick up one more token from the bank or steal one." data-tag="Max 3 total">—</div>
+          </div>
+          <div class="centre-label" style="margin-top:4px;">Your Pet</div>
+          <div class="pet-badge" data-tip="Your Pet — Rabbit 🐰 (Home)" data-desc="Your Rabbit is at home. Rabbit's power: the board it visits places 0 tiles that turn. With Samir so close to winning, consider sending Rabbit to his board next turn to freeze his tile placement." data-tag="Offensive Pet — Slow">🐰</div>
+        </div>
+      </div>
+
+      <!-- YOUR STRIPS -->
+      <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;">
+        <div class="win-strip hidden" style="border-color:var(--p1-orange);padding:6px 10px;"
+          data-tip="Your Secret Design Strip — Potty 💩" data-desc="Your Design strip is Potty — a poop emoji shape! Row 1 centre (1 tile), row 2 cols 2–4 (3 tiles), row 3 full (5 tiles). All 9 must be clean simultaneously. You're building toward it — notice your tiles are growing exactly in this shape." data-tag="Shhh — 9 tiles, all clean">
+          <div class="strip-dot" style="background:var(--p1-orange)"></div>Design — 🔒 secret
+        </div>
+        <div class="win-strip revealed" style="padding:6px 10px;"
+          data-tip="✓ Your Tiles Strip — Completed!" data-desc="You already revealed your Tiles strip: 'Bea(e)ch' — at least 5 of the 9 centre cross tiles clean. Done! Now everyone knows you've completed one condition, but they still don't know your Design strip. One more to go." data-tag="Bea(e)ch — Completed">
+          <div class="strip-dot" style="background:var(--gold)"></div>✓ Bea(e)ch
+        </div>
+      </div>
+
+      <!-- YOUR BOARD -->
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="board" id="board-p1" style="background:rgba(232,115,26,0.18);border:2.5px solid var(--p1-orange);"
+          data-tip="Your Bedsheet Board" data-desc="This is YOUR board — Orange. You've placed 11 tiles so far. Your centre cross is clean (Bea(e)ch complete!). You have one dirty tile with a brown sticker — it will spread to an adjacent tile next turn if you don't clean it. Your Potty pattern is visible to you in the build." data-tag="Your Board — 11 tiles placed">
+          <div class="board-grid" id="grid-p1" style="width:200px;height:200px;"></div>
+        </div>
+      </div>
+      <div class="opp-label" style="color:var(--p1-orange);font-size:11px;margin-top:6px;">You — Orange — Player 1</div>
+    </div>
+  </div>
+
+</div><!-- /table-layout -->
+</div><!-- /table -->
+</div><!-- /table-scene -->
+
+<!-- BOTTOM INFO -->
+<div class="bottom-info fade-up-3">
+  <div class="info-card">
+    <div class="ic-num">343</div>
+    <div class="ic-label">Unique Games</div>
+    <div class="ic-desc">7×7×7 win strip combinations mean no two games play the same way. Secret objectives change every time.</div>
+  </div>
+  <div class="info-card">
+    <div class="ic-num">50+</div>
+    <div class="ic-label">Card Names</div>
+    <div class="ic-desc">Cards named Amber Heard, Paad ki garmi, AAG Maa ka bhosda AAAG!!!, Bik gayi hai gormint. Pure unhinged desi energy.</div>
+  </div>
+  <div class="info-card">
+    <div class="ic-num">7</div>
+    <div class="ic-label">Unique Pets</div>
+    <div class="ic-desc">Dog, Cat, Frog, Eagle, Snake, Rabbit, Hamster — each with distinct powers forming a circular food chain. Deploy strategically.</div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-text">Hover over anything on the table to learn how it works. Take the guided tour to see it all in action.</div>
+  <button class="cta-btn" onclick="startTour()">Take the Guided Tour ✦</button>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════════════════════
+
+const PHASES = {
+  start: {
+    p1: { placed:[[2,2]], stickers:{} },
+    p2: { placed:[[1,3]], stickers:{} },
+    p3: { placed:[[0,0]], stickers:{} },
+    p4: { placed:[[3,4]], stickers:{} },
+  },
+  mid: {
+    p1: { placed:[[2,2],[2,3],[1,2],[1,3],[0,2],[0,3],[3,2],[3,3],[2,1],[1,1],[0,1]],
+          stickers:{[3*5+3]:'brown', [2*5+1]:'grey'} },
+    p2: { placed:[[0,4],[1,4],[2,4],[3,4],[4,4],[0,3],[1,3],[2,3],[3,3],[4,3],[0,2],[1,2],[2,2],[1,1]],
+          stickers:{[1*5+2]:'grey',[0*5+3]:'black'} },
+    p3: { placed:[[0,0],[0,1],[0,2],[1,0],[1,1],[1,2],[2,0],[2,1],[2,2]],
+          stickers:{[1*5+1]:'brown',[2*5+0]:'grey'} },
+    p4: { placed:[[3,4],[3,3],[4,4],[4,3],[2,4],[2,3],[3,2],[4,2]],
+          stickers:{[3*5+3]:'black'} },
+  },
+  late: {
+    p1: { placed:[[0,1],[0,2],[0,3],[1,1],[1,2],[1,3],[2,1],[2,2],[2,3],[3,1],[3,2],[3,3],[4,1],[4,2],[4,3],[1,0],[2,0],[3,0],[1,4],[2,4]],
+          stickers:{[0*5+2]:'brown',[4*5+2]:'grey',[3*5+1]:'blue'} },
+    p2: { placed:[[0,0],[0,1],[0,2],[0,3],[0,4],[1,0],[1,1],[1,2],[1,3],[1,4],[2,0],[2,1],[2,2],[2,3],[2,4],[3,0],[3,1],[3,2],[3,3],[3,4],[4,0],[4,1],[4,2],[4,3],[4,4]],
+          stickers:{[2*5+2]:'brown'} },
+    p3: { placed:[[0,0],[0,1],[0,2],[0,3],[0,4],[1,0],[1,1],[1,2],[1,3],[1,4],[2,0],[2,1],[2,2],[2,3],[3,0],[3,1],[3,2],[4,0],[4,1]],
+          stickers:{[1*5+3]:'blue',[3*5+1]:'brown'} },
+    p4: { placed:[[3,4],[3,3],[4,4],[4,3],[2,4],[2,3],[3,2],[4,2],[1,4],[1,3],[0,4],[0,3],[2,2],[3,1],[4,1],[4,0]],
+          stickers:{[3*5+3]:'black',[2*5+3]:'grey'} },
+  }
+};
+
+const TILE_COLORS = { p1:'#E8A050', p2:'#5AAAD4', p3:'#60C090', p4:'#B085D8' };
+const STICKER_COLORS = { brown:'#7B3300', grey:'#888', blue:'#2A6EA6', black:'#1A1A1A' };
+const STICKER_TIPS = {
+  brown:['Dirty Tile — Brown Sticker','A Poop or Stain card was played here. Clean with a Wash card or 2× W tokens. If uncleaned for 2 of your turns, it spreads to 1 adjacent tile — attacker\'s choice.','Urgent! Clean soon'],
+  grey: ['Crumbled Tile — Grey Sticker','A Crumble card was played here. Fix with an Iron card or 2× I tokens. Doesn\'t spread.','Iron card or 2× I tokens'],
+  blue: ['Torn Tile — Blue Sticker','A Tear card was played here. Fix with a Rafu card or 2× R tokens. Doesn\'t spread.','Rafu card or 2× R tokens'],
+  black:['Permanent Damage — Black Sticker','Burn or Fade card. Cannot be cleaned by any means. To move it off your board: spend 2 same-type Helpful cards to swap it with a clean unplaced tile.','Permanent — escape only'],
+};
+
+const HAND_CARDS = [
+  { type:'Dirty', typeBg:'#7B3300', icon:'💩', name:'Amber Heard', desc:'Targets centre space only' },
+  { type:'Wild',  typeBg:'#4A3A9E', icon:'🧿', name:'Nazar',       desc:'Bounces next attack' },
+  { type:'Helpful',typeBg:'#2E8B57',icon:'🧹', name:'Dhobi Ghat',  desc:'Remove 1 dirty sticker' },
+  { type:'Trigger',typeBg:'#8B5E10',icon:'🐾', name:'Sher ne Bulaya',desc:'Send pet anytime' },
+];
+
+let currentPhase = 'mid';
+
+// ═══════════════════════════════════════════════════════════════
+// BOARD BUILDER
+// ═══════════════════════════════════════════════════════════════
+
+function buildBoard(playerId, phase) {
+  const el = document.getElementById('grid-' + playerId);
+  if (!el) return;
+  el.innerHTML = '';
+  const data = PHASES[phase][playerId];
+  const placedSet = new Set(data.placed.map(([r,c]) => r*5+c));
+  const tileSize = playerId === 'p1' ? 36 : playerId === 'p3' ? 30 : 28;
+  el.style.gridTemplateColumns = `repeat(5, ${tileSize}px)`;
+
+  for (let r = 0; r < 5; r++) {
+    for (let c = 0; c < 5; c++) {
+      const idx = r * 5 + c;
+      const isPlaced = placedSet.has(idx);
+      const sticker = data.stickers[idx];
+      const div = document.createElement('div');
+      div.className = 'tile ' + (isPlaced ? 'placed' : 'empty');
+      div.style.cssText = `width:${tileSize}px;height:${tileSize}px;`;
+      if (isPlaced) {
+        div.style.background = TILE_COLORS[playerId];
+        if (sticker) {
+          const s = document.createElement('div');
+          s.className = 'sticker';
+          s.style.background = STICKER_COLORS[sticker];
+          s.style.border = '1px solid rgba(255,255,255,0.25)';
+          div.appendChild(s);
+          const [t, d, tag] = STICKER_TIPS[sticker];
+          div.setAttribute('data-tip', t);
+          div.setAttribute('data-desc', d);
+          div.setAttribute('data-tag', tag);
+        } else {
+          div.setAttribute('data-tip', 'Clean Tile');
+          div.setAttribute('data-desc', 'A placed tile with no stickers. It contributes to win condition checks. Protect it — opponents will try to dirty or damage your pattern tiles.');
+          div.setAttribute('data-tag', 'Safe for now');
+        }
+      } else {
+        div.setAttribute('data-tip', 'Empty Board Space');
+        div.setAttribute('data-desc', 'Not yet placed. Opponents can pre-mark blank spaces with dirty markers — when your tile lands here, it arrives already stained. Plan your placement path carefully.');
+        div.setAttribute('data-tag', 'Unplaced');
+      }
+      el.appendChild(div);
+    }
+  }
+}
+
+function buildHand() {
+  const el = document.getElementById('hand-cards');
+  el.innerHTML = '';
+  HAND_CARDS.forEach((card, i) => {
+    const div = document.createElement('div');
+    div.className = 'hand-card';
+    div.style.animationDelay = (i * 0.08) + 's';
+    div.innerHTML = `
+      <div class="card-type-band" style="background:${card.typeBg};">${card.type}</div>
+      <div class="card-icon">${card.icon}</div>
+      <div class="card-name">${card.name}</div>
+      <div class="card-desc-tiny">${card.desc}</div>
+    `;
+    const descs = {
+      'Amber Heard': 'The most famous card in the deck. Places a dirty (brown) sticker on the centre space of any board. If the centre tile isn\'t placed yet, the marker waits. When that tile arrives — surprise! Already stained.',
+      'Nazar': 'WILD CARD — Ultra rare, 1 copy in the entire deck! Play it face-down in front of you. The next negative card played against you bounces straight back to the attacker. They suffer their own attack.',
+      'Dhobi Ghat': 'Removes 1 dirty (brown) sticker from any placed tile on any board, including yours. No token needed. This is your cleaning card — use it before that stain spreads.',
+      'Sher ne Bulaya': 'Pet Trigger card! Play from your hand to send your pet to any board — same as rolling the paw symbol on dice. Your Rabbit can now be deployed on YOUR turn without waiting for dice luck.',
+    };
+    div.setAttribute('data-tip', card.name + ' — ' + card.type + ' Card');
+    div.setAttribute('data-desc', descs[card.name] || card.desc);
+    div.setAttribute('data-tag', card.type + ' Card');
+    el.appendChild(div);
+  });
+}
+
+function buildAll(phase) {
+  ['p1','p2','p3','p4'].forEach(p => buildBoard(p, phase));
+  buildHand();
+}
+
+function setPhase(phase, btn) {
+  currentPhase = phase;
+  document.querySelectorAll('.tour-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  buildAll(phase);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// TOOLTIP
+// ═══════════════════════════════════════════════════════════════
+
+const tooltip = document.getElementById('tooltip');
+const ttTitle = document.getElementById('tt-title');
+const ttBody  = document.getElementById('tt-body');
+const ttTag   = document.getElementById('tt-tag');
+let ttTimer;
+
+document.addEventListener('mousemove', e => {
+  const t = e.target.closest('[data-tip]');
+  if (t && !tourActive) {
+    clearTimeout(ttTimer);
+    ttTitle.textContent = t.dataset.tip || '';
+    ttBody.textContent  = t.dataset.desc || '';
+    ttTag.textContent   = t.dataset.tag || '';
+    ttTag.style.display = t.dataset.tag ? 'inline-block' : 'none';
+    tooltip.classList.add('visible');
+    const x = Math.min(e.clientX + 16, window.innerWidth - 290);
+    const y = e.clientY + 16;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top  = (y + window.scrollY) + 'px';
+    tooltip.style.position = 'fixed';
+  } else {
+    clearTimeout(ttTimer);
+    ttTimer = setTimeout(() => tooltip.classList.remove('visible'), 80);
+  }
+});
+
+document.addEventListener('mouseleave', () => tooltip.classList.remove('visible'));
+
+// ═══════════════════════════════════════════════════════════════
+// GUIDED TOUR
+// ═══════════════════════════════════════════════════════════════
+
+const TOUR_STEPS = [
+  { step:'01 / 09', title:'Welcome to Bedsheet 🛏️',
+    body:'A 3–4 player social strategy game where you\'re secretly trying to spread your bedsheet open in a specific shape — while everyone else ruins yours. Let\'s walk through the setup.' },
+  { step:'02 / 09', title:'Your Board (Orange)',
+    body:'The bottom board is YOURS. You\'ve placed 11 tiles so far, growing outward from the centre. Each tile must touch an existing tile — the sheet grows organically. One tile has a dirty brown sticker that needs cleaning urgently.', focus:'zone-p1' },
+  { step:'03 / 09', title:'Your Secret Win Strips 🔒',
+    body:'You hold 2 secret strips. ✓ You\'ve already completed "Bea(e)ch" (5 centre cross tiles clean) and revealed it. Your Design strip is still hidden — it\'s Potty 💩. 9 tiles in a poop emoji shape. Nobody knows yet.', focus:'zone-p1' },
+  { step:'04 / 09', title:'Your Hand — 4 Cards 🃏',
+    body:'You\'re holding Amber Heard (dirty — targets centre space), Nazar (WILD — bounces attacks back!), Dhobi Ghat (clean a dirty tile) and Sher ne Bulaya (pet trigger). Hover each card to see its power. What will you play?', focus:'zone-p1' },
+  { step:'05 / 09', title:'The Centre — Shared Resources',
+    body:'Two card piles, the token bank, win strip decks and pet pool all sit in the middle. The Action pile has 34 cards left. Draw on the card-draw dice symbol. Pet Action cards are drawn whenever any pet visits a board.', focus:'centre-area' },
+  { step:'06 / 09', title:'Token Economy 🪙',
+    body:'W, I and R tokens fill the bank. You can hold max 3 total. Spend 2 matching tokens to clean 1 tile without needing a card. The bank has plenty — but getting the type you need requires dice luck, auctions or stealing.', focus:'centre-area' },
+  { step:'07 / 09', title:'Pets & the Food Chain 🐾',
+    body:'4 pets are active: Dog (Rajan\'s), Frog (Samir\'s), Eagle (Priya\'s) and YOUR Rabbit. Dog is currently visiting Priya\'s board — when you send your Rabbit to Samir\'s board, he places 0 tiles that turn. Use it wisely.', focus:'pet-pool' },
+  { step:'08 / 09', title:'Watch Your Opponents',
+    body:'Samir (Blue, right) revealed his Tiles strip — he\'s close to winning! Priya (Green, top) has dirty tiles building up. Rajan (Purple, left) has a permanent burn mark making his Design strip harder. Read the table.', focus:'zone-p2' },
+  { step:'09 / 09', title:'Your Turn — What Do You Do? 🎲',
+    body:'Place 1 tile → Roll dice → Play a card → Check win strips. You have Nazar in hand. Samir looks close to winning. Do you play Dhobi Ghat to clean your dirty tile, or save Nazar for when Samir attacks you? The choice is yours.' },
+];
+
+let tourActive = false;
+let tourStep = 0;
+
+function startTour() {
+  tourActive = true;
+  tourStep = 0;
+  tooltip.classList.remove('visible');
+  document.getElementById('spotlightOverlay').classList.add('active');
+  renderTourStep();
+}
+
+function renderTourStep() {
+  const step = TOUR_STEPS[tourStep];
+  document.getElementById('sm-step').textContent = step.step;
+  document.getElementById('sm-title').textContent = step.title;
+  document.getElementById('sm-body').textContent = step.body;
+  const nextBtn = document.getElementById('sm-next-btn');
+  nextBtn.textContent = tourStep === TOUR_STEPS.length - 1 ? 'Finish ✦' : 'Next →';
+  // Progress dots
+  const prog = document.getElementById('sm-progress');
+  prog.innerHTML = TOUR_STEPS.map((_, i) =>
+    `<div class="sm-dot ${i === tourStep ? 'active' : ''}"></div>`
+  ).join('');
+  const msg = document.getElementById('spotlightMsg');
+  msg.classList.add('visible');
+}
+
+function nextTourStep() {
+  if (tourStep >= TOUR_STEPS.length - 1) { endTour(); return; }
+  tourStep++;
+  renderTourStep();
+}
+
+function prevTourStep() {
+  if (tourStep <= 0) return;
+  tourStep--;
+  renderTourStep();
+}
+
+function endTour() {
+  tourActive = false;
+  document.getElementById('spotlightOverlay').classList.remove('active');
+  document.getElementById('spotlightMsg').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════
+buildAll('mid');
+
+// Subtle tile placement animation on load
+setTimeout(() => {
+  document.querySelectorAll('.tile.placed').forEach((t, i) => {
+    t.style.opacity = '0';
+    t.style.transform = 'scale(0.5)';
+    t.style.transition = 'opacity 0.3s, transform 0.3s';
+    setTimeout(() => {
+      t.style.opacity = '1';
+      t.style.transform = 'scale(1)';
+    }, 50 + i * 18);
+  });
+}, 300);
+</script>
+</body>
+</html>
