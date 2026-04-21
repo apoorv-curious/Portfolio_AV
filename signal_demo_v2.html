@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Signal — Platform Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300;1,9..144,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#F5F1EB;--surface:#FFFFFF;--surface2:#FAF8F5;
+  --navy:#1B2D4F;--navy2:#2E4A73;--navy3:#4A7FA8;
+  --coral:#E0723F;--coral-lt:#FBE9DF;
+  --mint:#2DAA78;--mint-lt:#DEF5EC;
+  --amber:#C9952A;--amber-lt:#FBF0D8;
+  --red:#C0392B;--red-lt:#FDECEA;
+  --border:#E0D9CF;--muted:#7A8699;--text:#1B2D4F;
+  --ff-display:'Fraunces',serif;--ff-body:'DM Sans',sans-serif;
+  --shadow:0 2px 16px rgba(27,45,79,.07);--shadow-lg:0 8px 40px rgba(27,45,79,.13);
+}
+html,body{height:100%;background:var(--bg);font-family:var(--ff-body);color:var(--text);overflow:hidden;}
+
+/* NAV */
+.topnav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;background:rgba(245,241,235,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.brand{display:flex;align-items:center;gap:10px;}
+.brand-mark{width:32px;height:32px;border-radius:8px;background:var(--navy);display:flex;align-items:center;justify-content:center;}
+.brand-mark svg{width:18px;height:18px;}
+.brand-name{font-family:var(--ff-display);font-size:20px;font-weight:700;color:var(--navy);letter-spacing:-.3px;}
+.brand-tag{font-size:11px;color:var(--muted);font-weight:400;letter-spacing:.5px;text-transform:uppercase;margin-left:4px;}
+.flow-toggle{display:flex;background:var(--navy);border-radius:40px;padding:4px;gap:2px;}
+.toggle-btn{padding:7px 22px;border-radius:36px;border:none;cursor:pointer;font-family:var(--ff-body);font-size:13px;font-weight:500;letter-spacing:.2px;transition:all .25s;background:transparent;color:rgba(255,255,255,.55);}
+.toggle-btn.active{background:var(--coral);color:#fff;}
+.nav-right{display:flex;align-items:center;gap:12px;}
+.demo-badge{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:500;background:var(--amber-lt);color:var(--amber);border:1px solid var(--amber);letter-spacing:.3px;text-transform:uppercase;}
+
+/* STEP BAR */
+.stepbar{position:fixed;top:60px;left:0;right:0;z-index:90;background:var(--surface2);border-bottom:1px solid var(--border);padding:12px 32px;display:flex;align-items:center;gap:0;}
+.step-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:5px 12px;border-radius:30px;transition:all .2s;}
+.step-dot{width:24px;height:24px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600;color:var(--muted);transition:all .25s;flex-shrink:0;}
+.step-item.active .step-dot{background:var(--coral);border-color:var(--coral);color:#fff;}
+.step-item.done .step-dot{background:var(--mint);border-color:var(--mint);color:#fff;}
+.step-label{font-size:12px;font-weight:500;color:var(--muted);white-space:nowrap;transition:color .2s;}
+.step-item.active .step-label{color:var(--coral);font-weight:600;}
+.step-item.done .step-label{color:var(--mint);}
+.step-sep{width:24px;height:1px;background:var(--border);flex-shrink:0;}
+
+/* MAIN */
+.main{position:fixed;top:118px;left:0;right:0;bottom:64px;overflow-y:auto;padding:32px;}
+.screen{display:none;animation:fadeUp .4s ease;}
+.screen.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+
+/* BOTTOM NAV */
+.botnav{position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(245,241,235,.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:64px;}
+.nav-btn{display:flex;align-items:center;gap:8px;padding:10px 24px;border-radius:30px;border:1.5px solid var(--border);cursor:pointer;font-family:var(--ff-body);font-size:13px;font-weight:500;color:var(--muted);background:var(--surface);transition:all .2s;}
+.nav-btn:hover{border-color:var(--navy2);color:var(--navy);}
+.nav-btn.primary{background:var(--navy);border-color:var(--navy);color:#fff;}
+.nav-btn.primary:hover{background:var(--navy2);}
+.nav-btn:disabled{opacity:.35;pointer-events:none;}
+.step-counter{font-size:13px;color:var(--muted);font-weight:400;}
+.step-counter strong{color:var(--navy);font-weight:600;}
+
+/* SHARED */
+.page-header{margin-bottom:28px;}
+.flow-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;margin-bottom:12px;}
+.flow-badge.co{background:var(--navy);color:#fff;}
+.flow-badge.ca{background:var(--coral-lt);color:var(--coral);}
+.page-title{font-family:var(--ff-display);font-size:30px;font-weight:700;color:var(--navy);line-height:1.2;margin-bottom:6px;}
+.page-sub{font-size:14px;color:var(--muted);font-weight:400;line-height:1.6;max-width:560px;}
+.card{background:var(--surface);border-radius:16px;border:1px solid var(--border);box-shadow:var(--shadow);padding:24px;}
+.card-sm{padding:18px;}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.label{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px;}
+.field{width:100%;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--ff-body);font-size:13px;color:var(--navy);outline:none;transition:border .2s;}
+.field:focus{border-color:var(--navy3);}
+select.field{cursor:pointer;}
+.pill-group{display:flex;flex-wrap:wrap;gap:8px;}
+.pill{padding:7px 16px;border-radius:30px;border:1.5px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;background:var(--surface);color:var(--muted);}
+.pill.active,.pill:hover{border-color:var(--navy);background:var(--navy);color:#fff;}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;}
+.tag.navy{background:#EEF3F8;color:var(--navy2);}
+.tag.coral{background:var(--coral-lt);color:var(--coral);}
+.tag.mint{background:var(--mint-lt);color:var(--mint);}
+.tag.amber{background:var(--amber-lt);color:var(--amber);}
+.tag.red{background:var(--red-lt);color:var(--red);}
+.tag.verified{background:var(--mint-lt);color:var(--mint);}
+.tag.unverified{background:#F0F0F0;color:#999;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:30px;border:none;cursor:pointer;font-family:var(--ff-body);font-size:13px;font-weight:500;transition:all .2s;}
+.btn-primary{background:var(--coral);color:#fff;}
+.btn-primary:hover{background:#c85e2a;}
+.btn-navy{background:var(--navy);color:#fff;}
+.btn-navy:hover{background:var(--navy2);}
+.btn-ghost{background:transparent;color:var(--muted);border:1.5px solid var(--border);}
+.btn-ghost:hover{border-color:var(--navy2);color:var(--navy);}
+.btn-mint{background:var(--mint);color:#fff;}
+.btn-red{background:var(--red);color:#fff;}
+.btn-lg{padding:13px 30px;font-size:14px;}
+.stat-card{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:20px;}
+.stat-val{font-family:var(--ff-display);font-size:32px;font-weight:700;color:var(--navy);line-height:1;}
+.stat-label{font-size:12px;color:var(--muted);margin-top:4px;font-weight:400;}
+.stat-delta{font-size:11px;font-weight:500;margin-top:6px;}
+.delta-up{color:var(--mint);}
+.delta-down{color:var(--coral);}
+.divider{height:1px;background:var(--border);margin:20px 0;}
+.score-bar-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.score-bar-label{font-size:12px;font-weight:500;color:var(--navy);width:160px;flex-shrink:0;}
+.score-bar-track{flex:1;height:7px;background:#EEE9E0;border-radius:10px;overflow:hidden;}
+.score-bar-fill{height:100%;border-radius:10px;transition:width 1s ease;background:var(--navy2);}
+.score-bar-fill.high{background:var(--mint);}
+.score-bar-fill.med{background:var(--navy3);}
+.score-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;flex-shrink:0;}
+.score-badge.exceptional{background:var(--mint-lt);color:var(--mint);}
+.score-badge.strong{background:#E8F0FB;color:var(--navy3);}
+.score-badge.proficient{background:#F5F0E8;color:var(--amber);}
+.info-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.info-row:last-child{border-bottom:none;}
+.info-key{font-size:12px;color:var(--muted);font-weight:400;}
+.info-val{font-size:13px;color:var(--navy);font-weight:500;text-align:right;}
+.section-title{font-size:13px;font-weight:600;color:var(--navy);letter-spacing:-.1px;margin-bottom:12px;}
+
+/* MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:200;background:rgba(27,45,79,.35);backdrop-filter:blur(4px);align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border-radius:20px;padding:32px;width:480px;max-width:90vw;box-shadow:var(--shadow-lg);animation:fadeUp .3s ease;}
+.modal-title{font-family:var(--ff-display);font-size:22px;font-weight:700;color:var(--navy);margin-bottom:6px;}
+.modal-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+
+/* ── C1: POST A ROLE ── */
+#c1 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px 20px;}
+#c1 .form-full{grid-column:1/-1;}
+#c1 .form-block{display:flex;flex-direction:column;}
+.comp-range{display:flex;align-items:center;gap:12px;}
+.tool-grid{display:flex;flex-wrap:wrap;gap:8px;}
+.tool-chip{padding:7px 14px;border-radius:30px;border:1.5px solid var(--border);font-size:12px;font-weight:500;cursor:pointer;transition:all .2s;background:var(--surface);color:var(--muted);display:flex;align-items:center;gap:6px;}
+.tool-chip.active{border-color:var(--navy);background:#EEF3F8;color:var(--navy);}
+.tool-chip.active::before{content:'✓';font-size:10px;font-weight:700;color:var(--navy);}
+.tool-chip:hover{border-color:var(--navy3);}
+.testable-note{display:flex;align-items:center;gap:8px;background:var(--mint-lt);border:1px solid var(--mint);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--mint);font-weight:500;margin-bottom:10px;}
+.roadmap-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.roadmap-block{display:flex;flex-direction:column;}
+.roadmap-label{font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;margin-bottom:6px;display:inline-block;}
+.roadmap-label.d30{background:var(--mint-lt);color:var(--mint);}
+.roadmap-label.d60{background:var(--amber-lt);color:var(--amber);}
+.roadmap-label.d90{background:#E8F0FB;color:var(--navy3);}
+
+/* ── C2: POOL ── */
+#c2 .pool-layout{display:grid;grid-template-columns:320px 1fr;gap:24px;}
+.filter-panel{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:20px;}
+.filter-section{margin-bottom:20px;}
+.filter-section:last-child{margin-bottom:0;}
+.filter-title{font-size:12px;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;}
+.filter-note{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic;line-height:1.5;}
+.pool-result{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:28px;}
+.pool-count{font-family:var(--ff-display);font-size:64px;font-weight:700;color:var(--navy);line-height:1;}
+.pool-sub{font-size:15px;color:var(--muted);margin-top:4px;}
+.pool-breakdown{display:flex;flex-direction:column;gap:12px;margin:20px 0;}
+.pb-row{display:flex;align-items:center;gap:12px;}
+.pb-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.pb-label{font-size:13px;color:var(--muted);flex:1;}
+.pb-count{font-size:13px;font-weight:600;color:var(--navy);}
+.pb-bar-track{flex:2;height:5px;background:#EEE9E0;border-radius:10px;overflow:hidden;}
+.pb-bar-fill{height:100%;border-radius:10px;}
+
+/* ── C3: QUEUE ── */
+.queue-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.queue-meta{font-size:13px;color:var(--muted);}
+.queue-meta strong{color:var(--navy);}
+.queue-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.qtab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.qtab.active{color:var(--coral);border-bottom-color:var(--coral);}
+.qtab-content{display:none;}
+.qtab-content.active{display:block;}
+.notif-dot{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--coral);color:#fff;font-size:10px;font-weight:700;margin-left:6px;}
+.notif-dot.mint{background:var(--mint);}
+.queue-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+.q-card{background:var(--surface);border-radius:14px;border:1.5px solid var(--border);padding:18px;cursor:pointer;transition:all .2s;min-height:170px;display:flex;flex-direction:column;gap:6px;}
+.q-card:hover{border-color:var(--navy3);box-shadow:var(--shadow);}
+.q-card.fetch{background:var(--surface2);border-style:dashed;cursor:pointer;align-items:center;justify-content:center;color:var(--muted);}
+.q-card.fetch:hover{background:var(--mint-lt);border-color:var(--mint);color:var(--mint);}
+.q-card.urgent{border-color:var(--amber);background:linear-gradient(135deg,#fff 0%,#FFFBF2 100%);}
+.q-card.overdue{border-color:var(--red);background:linear-gradient(135deg,#fff 0%,#FFF5F4 100%);}
+.q-codename{font-family:var(--ff-display);font-size:14px;font-weight:600;color:var(--navy);letter-spacing:-.2px;}
+.q-role{font-size:11px;color:var(--muted);margin-top:1px;}
+.q-status{margin-top:auto;display:flex;align-items:center;gap:6px;}
+.status-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.status-dot.green{background:var(--mint);}
+.status-dot.amber{background:var(--amber);}
+.status-dot.blue{background:var(--navy3);}
+.status-dot.red{background:var(--red);}
+.status-dot.grey{background:#CCC;}
+.q-status-text{font-size:11px;font-weight:500;}
+.timer-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:20px;font-size:11px;font-weight:700;margin-top:4px;}
+.timer-chip.urgent{background:var(--amber-lt);color:var(--amber);}
+.timer-chip.overdue{background:var(--red-lt);color:var(--red);}
+.timer-chip.ok{background:var(--mint-lt);color:var(--mint);}
+
+/* shortlisted cards */
+.shortlist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.sl-card{background:var(--surface);border-radius:14px;border:1.5px solid var(--border);padding:18px;}
+.sl-codename{font-family:var(--ff-display);font-size:15px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.sl-meta{font-size:12px;color:var(--muted);margin-bottom:12px;}
+.stage-bar{display:flex;gap:4px;margin-bottom:14px;}
+.stage-step{flex:1;height:5px;border-radius:10px;background:#EEE9E0;}
+.stage-step.done{background:var(--mint);}
+.stage-step.active{background:var(--coral);}
+.sl-stage-label{font-size:11px;font-weight:600;color:var(--navy);margin-bottom:10px;}
+.sl-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.sl-btn{padding:6px 12px;border-radius:20px;border:1.5px solid var(--border);font-size:11px;font-weight:500;cursor:pointer;background:var(--surface);color:var(--muted);transition:all .2s;font-family:var(--ff-body);}
+.sl-btn:hover{border-color:var(--navy);color:var(--navy);}
+.sl-btn.mint{background:var(--mint-lt);color:var(--mint);border-color:var(--mint);}
+.sl-btn.coral{background:var(--coral-lt);color:var(--coral);border-color:var(--coral);}
+.sl-btn.navy{background:var(--navy);color:#fff;border-color:var(--navy);}
+
+/* ── C4: PROFILE ── */
+#c4 .profile-layout{display:grid;grid-template-columns:320px 1fr;gap:24px;}
+/* sticky decision bar at top */
+.decision-bar-top{
+  background:var(--surface);border:1.5px solid var(--border);border-radius:16px;
+  padding:16px 20px;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  box-shadow:var(--shadow);
+}
+.decision-bar-top.urgent-bar{border-color:var(--amber);background:linear-gradient(135deg,#fff 0%,#FFFBF2 100%);}
+.dbar-left{display:flex;align-items:center;gap:14px;}
+.dbar-timer{display:flex;flex-direction:column;align-items:center;background:var(--amber-lt);border-radius:10px;padding:8px 14px;}
+.dbar-timer-val{font-family:var(--ff-display);font-size:22px;font-weight:700;color:var(--amber);line-height:1;}
+.dbar-timer-label{font-size:9px;text-transform:uppercase;letter-spacing:.5px;color:var(--amber);font-weight:600;margin-top:1px;}
+.dbar-info{display:flex;flex-direction:column;gap:2px;}
+.dbar-codename{font-family:var(--ff-display);font-size:17px;font-weight:700;color:var(--navy);}
+.dbar-sub{font-size:12px;color:var(--muted);}
+.dbar-actions{display:flex;gap:8px;}
+.codename-hero{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);border-radius:16px;padding:24px;color:#fff;margin-bottom:16px;position:relative;overflow:hidden;}
+.codename-hero::before{content:'';position:absolute;top:-20px;right:-20px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.06);}
+.codename-label{font-size:10px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;opacity:.6;margin-bottom:6px;}
+.codename-name{font-family:var(--ff-display);font-size:28px;font-weight:700;line-height:1;margin-bottom:12px;}
+.codename-tags{display:flex;flex-wrap:wrap;gap:6px;}
+.codename-tag{padding:4px 10px;border-radius:20px;font-size:11px;background:rgba(255,255,255,.15);color:rgba(255,255,255,.9);}
+
+/* answer reveal */
+.answer-block{background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:10px;}
+.answer-q{font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+.answer-a{font-size:13px;color:var(--navy);line-height:1.7;}
+.answer-insight{display:flex;align-items:flex-start;gap:8px;background:var(--mint-lt);border-radius:8px;padding:10px;margin-top:8px;}
+.answer-insight-text{font-size:11px;color:var(--mint);font-style:italic;line-height:1.5;}
+
+/* ── C5: REPORT ── */
+.report-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.bench-card{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:22px;}
+.bench-bar-track{height:10px;background:#EEE9E0;border-radius:10px;overflow:hidden;margin:6px 0 2px;}
+.bench-bar-fill{height:100%;border-radius:10px;}
+.bench-label-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);}
+.insight-box{background:linear-gradient(135deg,#EEF3F8 0%,#E8F0FB 100%);border:1px solid #C5D8EE;border-radius:14px;padding:20px;}
+.insight-title{font-size:13px;font-weight:600;color:var(--navy);margin-bottom:6px;}
+.insight-text{font-size:13px;color:var(--navy2);line-height:1.6;}
+
+/* ── P: CANDIDATE SCREENS ── */
+#p1 .progress-bar{display:flex;align-items:center;gap:0;margin-bottom:28px;}
+#p1 .prog-step{display:flex;align-items:center;gap:8px;}
+#p1 .prog-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+#p1 .prog-dot.done{background:var(--mint);color:#fff;}
+#p1 .prog-dot.current{background:var(--navy);color:#fff;}
+#p1 .prog-dot.todo{background:var(--border);color:var(--muted);}
+#p1 .prog-label{font-size:12px;font-weight:500;}
+#p1 .prog-label.done{color:var(--mint);}
+#p1 .prog-label.current{color:var(--navy);}
+#p1 .prog-label.todo{color:var(--muted);}
+#p1 .prog-line{width:32px;height:2px;background:var(--border);margin:0 4px;}
+#p1 .prog-line.done{background:var(--mint);}
+.hierarchy-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.hier-card{padding:14px 10px;border-radius:12px;border:1.5px solid var(--border);cursor:pointer;transition:all .2s;text-align:center;background:var(--surface);}
+.hier-card:hover{border-color:var(--navy3);}
+.hier-card.active{border-color:var(--navy);background:#EEF3F8;}
+.hier-card .hier-title{font-size:12px;font-weight:600;color:var(--navy);margin-bottom:4px;}
+.hier-card .hier-desc{font-size:10px;color:var(--muted);line-height:1.4;}
+.hier-icon{font-size:18px;margin-bottom:6px;}
+.lock-banner{display:flex;align-items:center;gap:12px;background:var(--amber-lt);border:1px solid var(--amber);border-radius:12px;padding:14px 18px;margin-bottom:24px;}
+.lock-icon{font-size:20px;}
+.lock-text{font-size:13px;color:var(--amber);font-weight:500;line-height:1.4;}
+.lock-text strong{font-weight:700;}
+.intent-q{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:20px;margin-bottom:14px;}
+.intent-q .q-label{font-size:12px;font-weight:600;color:var(--navy);margin-bottom:8px;}
+.intent-q .q-hint{font-size:11px;color:var(--muted);margin-top:6px;font-style:italic;}
+.intent-q textarea{width:100%;min-height:70px;padding:10px 14px;border-radius:10px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--ff-body);font-size:13px;color:var(--navy);resize:none;outline:none;line-height:1.6;}
+.intent-q textarea:focus{border-color:var(--navy3);}
+.timer-bar{display:flex;align-items:center;justify-content:space-between;background:var(--navy);border-radius:14px;padding:16px 24px;margin-bottom:4px;color:#fff;}
+.timer-left{display:flex;align-items:center;gap:12px;}
+.timer-label{font-size:12px;opacity:.6;text-transform:uppercase;letter-spacing:.5px;}
+.timer-val{font-family:var(--ff-display);font-size:28px;font-weight:700;color:var(--amber);}
+.case-card{background:var(--surface);border-radius:16px;border:1px solid var(--border);padding:26px;margin-bottom:16px;}
+.case-scenario{background:var(--surface2);border-left:3px solid var(--navy);border-radius:0 10px 10px 0;padding:16px;margin-bottom:16px;font-size:14px;color:var(--navy);line-height:1.7;}
+.keystroke-note{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);background:#F5F2EC;border-radius:8px;padding:8px 12px;margin-bottom:10px;}
+.answer-area{width:100%;min-height:160px;padding:14px;border-radius:12px;border:1.5px solid var(--border);background:var(--surface2);font-family:var(--ff-body);font-size:13px;color:var(--navy);resize:none;outline:none;line-height:1.7;}
+.answer-area:focus{border-color:var(--navy3);}
+.word-count{font-size:11px;color:var(--muted);text-align:right;margin-top:6px;}
+.dim-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:600;background:var(--navy);color:#fff;margin-bottom:14px;}
+.dash-layout{display:grid;grid-template-columns:280px 1fr;gap:24px;}
+.profile-score-ring{width:100px;height:100px;margin:0 auto 12px;position:relative;}
+.ring-svg{transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:#EEE9E0;stroke-width:8;}
+.ring-fill{fill:none;stroke:var(--mint);stroke-width:8;stroke-linecap:round;stroke-dasharray:283;stroke-dashoffset:57;}
+.ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;}
+.ring-pct{font-family:var(--ff-display);font-size:24px;font-weight:700;color:var(--navy);}
+.ring-sub{font-size:10px;color:var(--muted);}
+.tab-bar{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:20px;}
+.tab{padding:10px 18px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;}
+.tab.active{color:var(--coral);border-bottom-color:var(--coral);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.company-eval-card{background:var(--surface);border-radius:14px;border:1.5px solid var(--border);padding:18px;margin-bottom:12px;transition:all .2s;}
+.company-eval-card:hover{border-color:var(--navy3);}
+.company-eval-card.active-call{border-color:var(--mint);background:var(--mint-lt);}
+.eval-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.eval-co{font-size:13px;font-weight:600;color:var(--navy);}
+.eval-role{font-size:12px;color:var(--muted);margin-top:2px;}
+.eval-timer{font-size:11px;color:var(--amber);font-weight:500;}
+.invite-card{max-width:640px;margin:0 auto;background:var(--surface);border-radius:20px;border:1.5px solid var(--border);overflow:hidden;box-shadow:var(--shadow-lg);}
+.invite-header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);padding:28px;color:#fff;}
+.invite-header .tag-row{display:flex;gap:8px;margin-bottom:14px;}
+.invite-co-tag{padding:4px 12px;border-radius:20px;background:rgba(255,255,255,.15);font-size:11px;color:rgba(255,255,255,.85);}
+.invite-title{font-family:var(--ff-display);font-size:24px;font-weight:700;line-height:1.2;margin-bottom:4px;}
+.invite-sub{font-size:13px;opacity:.7;}
+.invite-body{padding:24px;}
+.jd-snippet{background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:16px;font-size:13px;color:var(--navy);line-height:1.7;border-left:3px solid var(--navy3);}
+.slot-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:16px 0;}
+.slot-card{padding:12px;border-radius:10px;border:1.5px solid var(--border);text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);}
+.slot-card:hover{border-color:var(--mint);background:var(--mint-lt);}
+.slot-card.selected{border-color:var(--mint);background:var(--mint-lt);}
+.slot-day{font-size:12px;font-weight:600;color:var(--navy);}
+.slot-time{font-size:11px;color:var(--muted);margin-top:2px;}
+.invite-actions{display:flex;gap:10px;margin-top:20px;}
+.decline-reason{background:#FFF5F2;border:1.5px solid var(--coral-lt);border-radius:12px;padding:16px;margin-top:14px;display:none;}
+.decline-reason.show{display:block;}
+
+</style>
+</head>
+<body>
+
+<!-- ── TOP NAV ─────────────────────────────────────── -->
+<nav class="topnav">
+  <div class="brand">
+    <div class="brand-mark">
+      <svg viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="white" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="white" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+    <span class="brand-name">Signal</span>
+    <span class="brand-tag">/ Demo</span>
+  </div>
+  <div class="flow-toggle">
+    <button class="toggle-btn active" onclick="switchFlow('company')">🏢 &nbsp;For Companies</button>
+    <button class="toggle-btn" onclick="switchFlow('candidate')">👤 &nbsp;For Candidates</button>
+  </div>
+  <div class="nav-right"><span class="demo-badge">Interactive Demo</span></div>
+</nav>
+
+<!-- ── STEP BAR ──────────────────────────────────── -->
+<div class="stepbar" id="stepbar"></div>
+
+<!-- ── MAIN ─────────────────────────────────────── -->
+<div class="main">
+
+<!-- ══════════════════════ COMPANY SCREENS ══════════════════════ -->
+
+<!-- C1: POST A ROLE -->
+<div class="screen" id="c1">
+  <div class="page-header">
+    <div class="flow-badge co">Company Flow · Step 1 of 5</div>
+    <h1 class="page-title">Tell us about the role you're hiring for</h1>
+    <p class="page-sub">Be specific — this defines your candidate pool. We'll match based on function, tools, seniority, and what the role actually involves, not just a job title.</p>
+  </div>
+  <div class="card">
+    <div class="form-grid">
+      <div class="form-block">
+        <div class="label">Role Title</div>
+        <input class="field" value="Senior Product Manager — Platform" type="text">
+      </div>
+      <div class="form-block">
+        <div class="label">Primary Function</div>
+        <select class="field"><option selected>Product</option><option>Tech / Engineering</option><option>Finance</option><option>Sales</option><option>Marketing</option><option>Operations</option></select>
+      </div>
+      <div class="form-block">
+        <div class="label">Seniority Level</div>
+        <select class="field"><option>Individual Contributor</option><option selected>Manager</option><option>Head of Function</option><option>CXO / Founder</option></select>
+      </div>
+      <div class="form-block">
+        <div class="label">Experience Required</div>
+        <select class="field"><option>0–2 years</option><option>3–5 years</option><option selected>6–8 years</option><option>9–12 years</option></select>
+      </div>
+      <div class="form-block form-full">
+        <div class="label">Work Mode</div>
+        <div class="pill-group">
+          <span class="pill" onclick="togglePill(this)">In-office</span>
+          <span class="pill active" onclick="togglePill(this)">Hybrid</span>
+          <span class="pill" onclick="togglePill(this)">Remote OK</span>
+        </div>
+      </div>
+      <div class="form-block">
+        <div class="label">Joining Timeline</div>
+        <select class="field"><option>Immediately</option><option selected>Within 30 days</option><option>Within 60 days</option><option>Flexible</option></select>
+      </div>
+      <div class="form-block">
+        <div class="label">Compensation Band (LPA)</div>
+        <div class="comp-range">
+          <input class="field" type="text" value="₹ 35" style="max-width:90px;">
+          <span style="color:var(--muted);font-size:13px;">to</span>
+          <input class="field" type="text" value="₹ 48" style="max-width:90px;">
+        </div>
+      </div>
+
+      <!-- REQUIRED TOOLS — testable only -->
+      <div class="form-block form-full">
+        <div class="label">Required Tools & Software</div>
+        <div class="testable-note">✓ Only tools Signal can verify through timed skill tests are listed here. Candidates earn a Verified badge for each.</div>
+        <div class="tool-grid">
+          <span class="tool-chip" onclick="togglePill(this)">Excel / Sheets</span>
+          <span class="tool-chip active" onclick="togglePill(this)">SQL</span>
+          <span class="tool-chip" onclick="togglePill(this)">Python</span>
+          <span class="tool-chip" onclick="togglePill(this)">Tableau</span>
+          <span class="tool-chip" onclick="togglePill(this)">Power BI</span>
+          <span class="tool-chip active" onclick="togglePill(this)">Figma</span>
+          <span class="tool-chip" onclick="togglePill(this)">JIRA / Linear</span>
+          <span class="tool-chip" onclick="togglePill(this)">Salesforce</span>
+          <span class="tool-chip" onclick="togglePill(this)">HubSpot</span>
+          <span class="tool-chip" onclick="togglePill(this)">R</span>
+          <span class="tool-chip" onclick="togglePill(this)">JavaScript</span>
+          <span class="tool-chip" onclick="togglePill(this)">Java</span>
+          <span class="tool-chip" onclick="togglePill(this)">Google Analytics</span>
+          <span class="tool-chip" onclick="togglePill(this)">Mixpanel</span>
+          <span class="tool-chip" onclick="togglePill(this)">AWS / Cloud</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;">Verified tool skills will be prioritised in your candidate pool ranking. Unverified candidates can still appear — their tag will show as unverified.</div>
+      </div>
+
+      <!-- OTHER SKILLS — free text -->
+      <div class="form-block form-full">
+        <div class="label">Other Skills or Qualities You're Looking For</div>
+        <textarea class="field" style="min-height:64px;resize:none;" placeholder="e.g. Strong stakeholder management, experience working with cross-functional teams, comfort with ambiguity in early-stage environments…">Strong stakeholder management, comfortable working directly with founding engineers, experience defining technical architecture requirements.</textarea>
+        <div style="font-size:11px;color:var(--muted);margin-top:6px;">These are not testable or verified by Signal — they're shared with candidates as context only and do not affect pool matching or ranking.</div>
+      </div>
+
+      <!-- ROLE RESPONSIBILITIES & ROADMAP -->
+      <div class="form-block form-full" style="margin-top:4px;">
+        <div class="label">What Will This Person Actually Do?</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Define the key responsibilities and what success looks like in each phase. This is shown to candidates before they accept a call, and used to improve future pool matching for your company.</div>
+        <div style="margin-bottom:14px;">
+          <textarea class="field" style="min-height:68px;resize:none;" placeholder="List the core responsibilities of this role…">Own the platform product roadmap end-to-end. Work with engineering to break down architecture decisions. Define metrics, set targets, and be accountable to them. Represent the product in leadership reviews.</textarea>
+        </div>
+        <div class="label" style="margin-top:4px;">30–60–90 Day Roadmap for this Candidate</div>
+        <div class="roadmap-grid">
+          <div class="roadmap-block">
+            <span class="roadmap-label d30">First 30 Days</span>
+            <textarea class="field" style="min-height:90px;resize:none;font-size:12px;">Onboard to the existing platform product — understand current architecture, team dynamics, and live metrics. No deliverables expected. Shadow key decisions.</textarea>
+          </div>
+          <div class="roadmap-block">
+            <span class="roadmap-label d60">Days 31–60</span>
+            <textarea class="field" style="min-height:90px;resize:none;font-size:12px;">Own the next sprint planning cycle. Propose one roadmap change based on observed gaps. Begin direct stakeholder relationships with engineering leads.</textarea>
+          </div>
+          <div class="roadmap-block">
+            <span class="roadmap-label d90">Days 61–90</span>
+            <textarea class="field" style="min-height:90px;resize:none;font-size:12px;">Drive the next major feature release independently. Present a 6-month product strategy to leadership. Be the single point of accountability for platform KPIs.</textarea>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;">A clear 30-60-90 improves candidate call acceptance rate by giving genuine context about expectations — not just a job description.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- C2: BUILD POOL -->
+<div class="screen" id="c2">
+  <div class="page-header">
+    <div class="flow-badge co">Company Flow · Step 2 of 5</div>
+    <h1 class="page-title">Build your candidate pool</h1>
+    <p class="page-sub">Set your filters. We'll show the count of matching verified profiles before you lock. Once locked, Signal draws your queue from this pool randomly — ranked by our internal match score.</p>
+  </div>
+  <div class="pool-layout">
+    <div class="filter-panel">
+      <div style="font-size:14px;font-weight:600;color:var(--navy);margin-bottom:16px;">Active Filters</div>
+
+      <div class="filter-section">
+        <div class="filter-title">Functions to consider</div>
+        <div class="pill-group">
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">Product</span>
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">Marketing</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Strategy</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Operations</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Tech / Eng</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Finance</span>
+        </div>
+        <div class="filter-note">We check both current and past function to include career-switchers who may be a strong fit.</div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Experience Range</div>
+        <div class="pill-group">
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">3–5 yrs</span>
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">6–8 yrs</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">9–12 yrs</span>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Openness Level</div>
+        <div class="pill-group">
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">Actively looking</span>
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">Open to right role</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Passively exploring</span>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Work Mode</div>
+        <div class="pill-group">
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">Hybrid</span>
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">In-office</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Remote</span>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Candidate Locations</div>
+        <div class="pill-group">
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">Bangalore</span>
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">Mumbai</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Delhi / NCR</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Hyderabad</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Pune</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">Chennai</span>
+        </div>
+        <div style="margin-top:10px;">
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+            <input type="checkbox" checked style="accent-color:var(--navy);width:14px;height:14px;">
+            <span style="font-size:12px;color:var(--navy);font-weight:500;">Include candidates open to relocation</span>
+          </label>
+          <div class="filter-note">This adds candidates in other cities who have marked 'Open to relocation' in their profile.</div>
+        </div>
+      </div>
+
+      <div class="filter-section">
+        <div class="filter-title">Joining Timeline</div>
+        <div class="pill-group">
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">0–30 days</span>
+          <span class="pill active" onclick="togglePill(this)" style="font-size:11px;">30–60 days</span>
+          <span class="pill" onclick="togglePill(this)" style="font-size:11px;">60+ days</span>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="filter-note">Only candidates who have completed all assessments and the intent questionnaire appear in your pool.</div>
+    </div>
+
+    <div class="pool-result">
+      <div class="label">Matching Verified Profiles</div>
+      <div class="pool-count">312</div>
+      <div class="pool-sub">candidates match your current filters</div>
+      <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+        <span class="tag navy">Product: 198</span>
+        <span class="tag navy">Marketing: 114</span>
+        <span class="tag mint">SQL verified: 87</span>
+        <span class="tag mint">Figma verified: 142</span>
+        <span class="tag amber">Open to relocate: +46 added</span>
+      </div>
+      <div class="pool-breakdown">
+        <div class="pb-row">
+          <div class="pb-dot" style="background:var(--coral);"></div>
+          <div class="pb-label">Actively looking</div>
+          <div class="pb-bar-track"><div class="pb-bar-fill" style="width:40%;background:var(--coral);"></div></div>
+          <div class="pb-count">126</div>
+        </div>
+        <div class="pb-row">
+          <div class="pb-dot" style="background:var(--navy3);"></div>
+          <div class="pb-label">Open to right opportunity</div>
+          <div class="pb-bar-track"><div class="pb-bar-fill" style="width:56%;background:var(--navy3);"></div></div>
+          <div class="pb-count">174</div>
+        </div>
+        <div class="pb-row">
+          <div class="pb-dot" style="background:var(--muted);"></div>
+          <div class="pb-label">Passively exploring</div>
+          <div class="pb-bar-track"><div class="pb-bar-fill" style="width:4%;background:var(--muted);"></div></div>
+          <div class="pb-count">12</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:20px;">Profiles will be served to you one at a time from this locked pool — ranked internally by Signal. You won't browse the full list. Candidates who have verified the tools you require will rank higher.</div>
+      <button class="btn btn-navy btn-lg" onclick="showPoolLocked()">
+        🔒 &nbsp;Lock This Pool & Start Evaluating
+      </button>
+      <div id="pool-locked-msg" style="display:none;margin-top:14px;" class="tag mint">✓ &nbsp;Pool locked — 312 candidates · First profiles ready to fetch</div>
+    </div>
+  </div>
+</div>
+
+<!-- C3: QUEUE -->
+<div class="screen" id="c3">
+  <div class="page-header">
+    <div class="flow-badge co">Company Flow · Step 3 of 5</div>
+    <h1 class="page-title">Your evaluation queue</h1>
+    <p class="page-sub">Max 10 active slots. Fetch profiles when you're ready — slots never auto-fill. Once you request a call and it proceeds, that profile moves to your Shortlist for ongoing tracking.</p>
+  </div>
+
+  <div class="queue-tabs">
+    <div class="qtab active" onclick="switchQTab(this,'qtab-active')">Active Queue <span class="notif-dot">2</span></div>
+    <div class="qtab" onclick="switchQTab(this,'qtab-shortlisted')">Shortlisted <span class="notif-dot mint">3</span></div>
+  </div>
+
+  <!-- ACTIVE QUEUE TAB -->
+  <div class="qtab-content active" id="qtab-active">
+    <div class="queue-header">
+      <div class="queue-meta"><strong>8 of 10</strong> slots active &nbsp;·&nbsp; Pool remaining: <strong>304</strong></div>
+      <div style="font-size:12px;color:var(--muted);">Sort: <span style="color:var(--navy);font-weight:500;cursor:pointer;">Recommended ▾</span></div>
+    </div>
+    <div class="queue-grid">
+      <!-- OVERDUE -->
+      <div class="q-card overdue" onclick="goToScreen('company',3)">
+        <div class="q-codename">MOON GUARD</div>
+        <div class="q-role">Product · 6–8 yrs · Bangalore</div>
+        <span class="tag mint" style="font-size:10px;margin-top:2px;">SQL ✓ · Figma ✓</span>
+        <div class="q-status"><div class="status-dot amber"></div><span class="q-status-text" style="color:var(--amber);">Decision needed</span></div>
+        <div class="timer-chip overdue">⚠ 1 day left</div>
+      </div>
+      <!-- URGENT -->
+      <div class="q-card urgent">
+        <div class="q-codename">EMBER PEAK</div>
+        <div class="q-role">Product · 3–5 yrs · Bangalore</div>
+        <span class="tag mint" style="font-size:10px;margin-top:2px;">Figma ✓</span>
+        <div class="q-status"><div class="status-dot amber"></div><span class="q-status-text" style="color:var(--amber);">Decision needed</span></div>
+        <div class="timer-chip urgent">⏱ 3 days left</div>
+      </div>
+      <!-- CALL SCHEDULED -->
+      <div class="q-card">
+        <div class="q-codename">JADE RIVER</div>
+        <div class="q-role">Product · 6–8 yrs · Bangalore</div>
+        <span class="tag navy" style="font-size:10px;margin-top:2px;">Actively looking</span>
+        <div class="q-status"><div class="status-dot green"></div><span class="q-status-text" style="color:var(--mint);">Call scheduled</span></div>
+        <div class="timer-chip ok">📅 Tomorrow 3 PM</div>
+      </div>
+      <!-- FLAGGED — GOT OFFER -->
+      <div class="q-card">
+        <div class="q-codename">COBALT RAIN</div>
+        <div class="q-role">Marketing → Product · 6–8 yrs</div>
+        <span class="tag amber" style="font-size:10px;margin-top:2px;">Got an opportunity · 0 prior flags</span>
+        <div class="q-status"><div class="status-dot amber"></div><span class="q-status-text" style="color:var(--amber);">Flagged · Still reachable</span></div>
+        <div class="timer-chip urgent">⏱ 5 days left</div>
+      </div>
+      <!-- CALL DONE — POST-CALL DECISION -->
+      <div class="q-card">
+        <div class="q-codename">STONE ARCH</div>
+        <div class="q-role">Product · 6–8 yrs · Bangalore</div>
+        <span class="tag navy" style="font-size:10px;margin-top:2px;">Call completed</span>
+        <div class="q-status"><div class="status-dot blue"></div><span class="q-status-text" style="color:var(--navy3);">Post-call action needed</span></div>
+        <div style="display:flex;gap:6px;margin-top:4px;">
+          <span class="sl-btn mint" onclick="alert('STONE ARCH moved to Shortlist → Interview Stage 1')">Move to Shortlist →</span>
+          <span class="sl-btn coral" onclick="alert('Rejection logged. Reason required.')">Reject</span>
+        </div>
+      </div>
+      <!-- REJECTED — SLOT REOPENING -->
+      <div class="q-card" style="opacity:.5;">
+        <div class="q-codename">GREY MARSH</div>
+        <div class="q-role">Product · 9–12 yrs · Mumbai</div>
+        <div class="q-status"><div class="status-dot grey"></div><span class="q-status-text" style="color:var(--muted);">Rejected · Salary mismatch</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Slot reopening…</div>
+      </div>
+      <!-- REJECTED -->
+      <div class="q-card" style="opacity:.5;">
+        <div class="q-codename">DAWN RIDGE</div>
+        <div class="q-role">Product · 6–8 yrs · Bangalore</div>
+        <div class="q-status"><div class="status-dot grey"></div><span class="q-status-text" style="color:var(--muted);">Rejected · Experience gap</span></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:4px;">Slot reopening…</div>
+      </div>
+      <!-- EMPTY — needs decision first -->
+      <div class="q-card" style="opacity:.4;cursor:not-allowed;justify-content:center;align-items:center;text-align:center;">
+        <div style="font-size:11px;color:var(--muted);line-height:1.6;">Action STONE ARCH first to unlock this slot</div>
+      </div>
+      <!-- FETCH -->
+      <div class="q-card fetch" onclick="alert('Fetching next profile from pool of 304...')">
+        <div style="font-size:22px;margin-bottom:6px;">＋</div>
+        <div style="font-size:12px;font-weight:500;">Fetch Profile</div>
+        <div style="font-size:10px;margin-top:4px;">1 slot free</div>
+      </div>
+      <div class="q-card fetch" onclick="alert('Fetching next profile from pool of 304...')">
+        <div style="font-size:22px;margin-bottom:6px;">＋</div>
+        <div style="font-size:12px;font-weight:500;">Fetch Profile</div>
+        <div style="font-size:10px;margin-top:4px;">1 slot free</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHORTLISTED TAB -->
+  <div class="qtab-content" id="qtab-shortlisted">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Candidates you've moved past the first call. Manage your interview stages and log final decisions here. These profiles no longer occupy queue slots.</div>
+    <div class="shortlist-grid">
+
+      <!-- Shortlisted card 1 — Stage 2 interview -->
+      <div class="sl-card">
+        <div class="sl-codename">SILVER DUNE</div>
+        <div class="sl-meta">Product · 9–12 yrs · Mumbai · Open to relocate</div>
+        <div class="sl-stage-label">Stage: 2nd Round Interview</div>
+        <div class="stage-bar">
+          <div class="stage-step done"></div>
+          <div class="stage-step done"></div>
+          <div class="stage-step active"></div>
+          <div class="stage-step"></div>
+          <div class="stage-step"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Next: Technical interview — Dec 18, 11 AM</div>
+        <div class="sl-actions">
+          <span class="sl-btn navy" onclick="alert('Moved to Assignment Round')">Next Stage →</span>
+          <span class="sl-btn mint" onclick="alert('Marked as Offered! Candidate will be notified via Signal.')">Mark Offered</span>
+          <span class="sl-btn coral" onclick="showShortlistReject('SILVER DUNE')">Reject</span>
+        </div>
+      </div>
+
+      <!-- Shortlisted card 2 — Assignment pending -->
+      <div class="sl-card">
+        <div class="sl-codename">JADE RIVER</div>
+        <div class="sl-meta">Product · 6–8 yrs · Bangalore</div>
+        <div class="sl-stage-label">Stage: Assignment / Case Study</div>
+        <div class="stage-bar">
+          <div class="stage-step done"></div>
+          <div class="stage-step done"></div>
+          <div class="stage-step done"></div>
+          <div class="stage-step active"></div>
+          <div class="stage-step"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Assignment sent Dec 14 · Awaiting submission</div>
+        <div class="sl-actions">
+          <span class="sl-btn navy" onclick="alert('Moving to Final Round')">Final Round →</span>
+          <span class="sl-btn mint" onclick="alert('Marked as Selected! Offer details can now be shared.')">Mark Selected</span>
+          <span class="sl-btn coral" onclick="showShortlistReject('JADE RIVER')">Reject</span>
+        </div>
+      </div>
+
+      <!-- Shortlisted card 3 — Offer extended -->
+      <div class="sl-card" style="border-color:var(--mint);background:var(--mint-lt);">
+        <div class="sl-codename">STONE ARCH</div>
+        <div class="sl-meta">Product · 6–8 yrs · Bangalore</div>
+        <div class="sl-stage-label" style="color:var(--mint);">Stage: Offer Extended 🎉</div>
+        <div class="stage-bar">
+          <div class="stage-step done"></div>
+          <div class="stage-step done"></div>
+          <div class="stage-step done"></div>
+          <div class="stage-step done"></div>
+          <div class="stage-step" style="background:var(--mint);opacity:.4;"></div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px;">Offer sent Dec 12 · Awaiting acceptance</div>
+        <div class="sl-actions">
+          <span class="sl-btn navy" onclick="alert('Role marked as Filled! All remaining queue candidates will be released with anonymised insights.')">Mark Role Filled ✓</span>
+          <span class="sl-btn coral" onclick="showShortlistReject('STONE ARCH')">Offer Rejected</span>
+        </div>
+      </div>
+
+    </div>
+    <div style="margin-top:20px;background:var(--surface2);border-radius:12px;padding:14px;font-size:12px;color:var(--muted);line-height:1.7;">
+      💡 When you mark a role as filled, all candidates still in your active queue will receive a notification that the role has been filled, along with an anonymised profile insight of the selected candidate.
+    </div>
+  </div>
+</div>
+
+<!-- C4: EVALUATE CANDIDATE -->
+<div class="screen" id="c4">
+  <div class="page-header">
+    <div class="flow-badge co">Company Flow · Step 4 of 5</div>
+    <h1 class="page-title">Evaluate the profile</h1>
+    <p class="page-sub">Everything here was captured through verified assessments and a 30-day locked intent snapshot. Names and employer history are revealed only after a call is confirmed.</p>
+  </div>
+
+  <!-- DECISION BAR — STICKY AT TOP -->
+  <div class="decision-bar-top urgent-bar">
+    <div class="dbar-left">
+      <div class="dbar-timer">
+        <div class="dbar-timer-val">1d 6h</div>
+        <div class="dbar-timer-label">to respond</div>
+      </div>
+      <div class="dbar-info">
+        <div class="dbar-codename">MOON GUARD</div>
+        <div class="dbar-sub">Product · Manager · 6–8 yrs · Bangalore · Actively looking</div>
+      </div>
+    </div>
+    <div class="dbar-actions">
+      <button class="btn btn-primary" onclick="showCallModal()">📞 &nbsp;Request a Call</button>
+      <button class="btn btn-ghost" onclick="showRejectModal()">Not the right fit</button>
+    </div>
+  </div>
+
+  <div class="profile-layout">
+    <!-- LEFT COLUMN -->
+    <div>
+      <div class="codename-hero">
+        <div class="codename-label">Candidate Codename</div>
+        <div class="codename-name">MOON GUARD</div>
+        <div class="codename-tags">
+          <span class="codename-tag">Product · Manager level</span>
+          <span class="codename-tag">6–8 years</span>
+          <span class="codename-tag">Bangalore</span>
+          <span class="codename-tag">Open to relocate</span>
+        </div>
+      </div>
+
+      <!-- Thinking Scores -->
+      <div class="card card-sm" style="margin-bottom:16px;">
+        <div class="section-title">Thinking Profile</div>
+        <div class="score-bar-row"><div class="score-bar-label">Problem Solving</div><div class="score-bar-track"><div class="score-bar-fill high" style="width:92%;"></div></div><div class="score-badge exceptional">Exceptional</div></div>
+        <div class="score-bar-row"><div class="score-bar-label">First Principle Thinking</div><div class="score-bar-track"><div class="score-bar-fill high" style="width:88%;"></div></div><div class="score-badge exceptional">Exceptional</div></div>
+        <div class="score-bar-row"><div class="score-bar-label">Decision Making</div><div class="score-bar-track"><div class="score-bar-fill med" style="width:74%;"></div></div><div class="score-badge strong">Strong</div></div>
+        <div class="score-bar-row"><div class="score-bar-label">Communication</div><div class="score-bar-track"><div class="score-bar-fill med" style="width:80%;"></div></div><div class="score-badge strong">Strong</div></div>
+        <div class="score-bar-row"><div class="score-bar-label">Curiosity</div><div class="score-bar-track"><div class="score-bar-fill high" style="width:95%;"></div></div><div class="score-badge exceptional">Exceptional</div></div>
+        <div class="score-bar-row" style="margin-bottom:0;"><div class="score-bar-label">Work Ethic</div><div class="score-bar-track"><div class="score-bar-fill med" style="width:78%;"></div></div><div class="score-badge strong">Strong</div></div>
+        <div class="divider"></div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;font-style:italic;">"Reframed the constraint before solving — strong tendency to question assumptions before acting. Cross-domain curiosity evident in Q3 response."</div>
+      </div>
+
+      <!-- Skills -->
+      <div class="card card-sm" style="margin-bottom:16px;">
+        <div class="section-title">Tools & Skills</div>
+        <div class="pill-group" style="margin-bottom:8px;">
+          <span class="tag verified">✓ SQL</span>
+          <span class="tag verified">✓ Figma</span>
+          <span class="tag verified">✓ Mixpanel</span>
+          <span class="tag unverified">Python (unverified)</span>
+          <span class="tag unverified">Excel (unverified)</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);">Verified = passed Signal's timed skill test · Unverified = self-declared</div>
+      </div>
+
+      <!-- Platform signals -->
+      <div class="card card-sm">
+        <div class="section-title">Platform Signals</div>
+        <div class="info-row"><div class="info-key">Last active</div><div class="info-val" style="color:var(--mint);">2 days ago</div></div>
+        <div class="info-row"><div class="info-key">Times marked unavailable</div><div class="info-val">0</div></div>
+        <div class="info-row"><div class="info-key">Answer freshness</div><div class="info-val">Refreshed 8 days ago</div></div>
+        <div class="info-row"><div class="info-key">Assessments completed</div><div class="info-val">4 of 4</div></div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div>
+      <!-- Intent Snapshot -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-title">Intent Snapshot · Locked 8 days ago</div>
+        <div class="grid-2" style="gap:10px;margin-bottom:14px;">
+          <div style="background:var(--surface2);border-radius:10px;padding:12px;">
+            <div class="label">Status</div>
+            <span class="tag coral">Actively looking — in 30 days</span>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px;">
+            <div class="label">Mode</div>
+            <span class="tag navy">Hybrid preferred</span>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px;">
+            <div class="label">Target Roles</div>
+            <div style="font-size:13px;font-weight:500;color:var(--navy);">Senior PM · Group PM</div>
+          </div>
+          <div style="background:var(--surface2);border-radius:10px;padding:12px;">
+            <div class="label">Expected CTC</div>
+            <div style="font-size:13px;font-weight:500;color:var(--navy);">₹38–46 LPA</div>
+          </div>
+        </div>
+        <div style="background:var(--surface2);border-radius:12px;padding:14px;margin-bottom:10px;">
+          <div class="label" style="margin-bottom:6px;">Why open to change</div>
+          <div style="font-size:13px;color:var(--navy);line-height:1.7;">"I've built and scaled the core payments product from 0 to 4M users. The architecture decisions are made and the team runs well. I want a problem that isn't solved yet — preferably one where product and engineering are genuinely co-owners of the roadmap."</div>
+        </div>
+        <div style="background:#FFF8F5;border:1px solid var(--coral-lt);border-radius:12px;padding:14px;">
+          <div class="label" style="margin-bottom:6px;color:var(--coral);">Deal-breakers</div>
+          <div style="font-size:13px;color:var(--navy);line-height:1.7;">"Roles where product is a project management function rather than a decision-making seat. Micromanagement. Companies that ship by consensus and call it collaboration."</div>
+        </div>
+      </div>
+
+      <!-- ASSESSMENT ANSWERS — actual written responses -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:4px;">Assessment Answers · Actual Responses</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">These are the candidate's verbatim responses written under timed conditions. Keystroke-only input. Questions rotate so no two candidates answer the same prompt.</div>
+
+        <div class="answer-block">
+          <div class="answer-q">Q1 · Problem Solving + First Principle Thinking</div>
+          <div style="font-size:11px;color:var(--navy2);font-style:italic;margin-bottom:8px;line-height:1.5;">Scenario: Payment success rate dropped from 94% to 87% over 2 weeks. No code changes. Support volume up 23%. A competitor launched 10 days ago. What do you do?</div>
+          <div class="answer-a">"First I'd separate signal from noise. The fact that there are no code deployments rules out our systems as the root cause — that's actually reassuring. The timing overlap with the competitor launch is suspicious but not causal by itself. I'd start by looking at where the failure is happening — is it a specific payment method, a specific bank, a geography? If it's distributed across all payment rails, the competitor hypothesis becomes more relevant — maybe users are abandoning mid-flow to try the competitor. If it's concentrated in one rail, it's likely a bank-side or PSP issue. I'd pull the failed transaction logs within the hour, segment by failure code, and talk to our PSP contacts in parallel. The 23% support spike suggests users are confused, not that they've left — which tells me something is failing visibly, not silently. I'd get a fix-or-explain answer within 24 hours, not a week."</div>
+          <div class="answer-insight"><span>💡</span><span class="answer-insight-text">Demonstrated structured decomposition — separated symptoms from causes before proposing action. Strong first-principles approach.</span></div>
+        </div>
+
+        <div class="answer-block">
+          <div class="answer-q">Q2 · Decision Making Under Ambiguity</div>
+          <div style="font-size:11px;color:var(--navy2);font-style:italic;margin-bottom:8px;line-height:1.5;">Scenario: Your team has 2 weeks left in the quarter. You have three features 70% complete. Leadership wants one shipped. Engineering says they're all equal effort. You can't extend the timeline. What do you ship?</div>
+          <div class="answer-a">"I'd decide in under an hour — not over multiple meetings. The question isn't which feature is technically complete, it's which one has the highest cost of delay. I'd go back to why each feature was prioritised in the first place. Which one was tied to a business metric with a deadline? If feature A was supposed to support a sales motion for Q1, and Q1 starts in 3 weeks, that's the answer. If there's genuinely no external forcing function, I'd ship the one with the narrowest blast radius if something goes wrong — the safest 70% in production is better than the most impressive 70% that takes the site down. I'd communicate the decision clearly and quickly, not hedge. The team can't execute on ambiguity."</div>
+          <div class="answer-insight"><span>💡</span><span class="answer-insight-text">Arrived at a decision framework rather than hedging. Comfort with incomplete information is evident.</span></div>
+        </div>
+
+        <div class="answer-block">
+          <div class="answer-q">Q3 · Curiosity</div>
+          <div style="font-size:11px;color:var(--navy2);font-style:italic;margin-bottom:8px;line-height:1.5;">Open-ended: Given the payment failure scenario in Q1 — what are the five things you'd want to know more about that weren't in the brief?</div>
+          <div class="answer-a">"1. What does our churn curve look like for users who hit a failed payment — do they retry or leave? 2. Is our retry logic optimised, or are we just presenting the failure to the user and expecting them to act? 3. What's the failure message users are actually seeing — is it our copy or the bank's error code? 3. Has our PSP changed any of their routing rules in the last 30 days? 4. Do we have real-time visibility into competitor transaction success rates, and if not, why not? 5. Are we measuring payment success rate by transaction or by session — because a user who fails twice and succeeds on the third attempt inflates our failure rate but the outcome was fine."</div>
+          <div class="answer-insight"><span>💡</span><span class="answer-insight-text">Asked operational, analytical, and UX questions — showed range beyond the obvious. The PSP routing and measurement methodology questions were unusually specific.</span></div>
+        </div>
+      </div>
+
+      <!-- Background -->
+      <div class="card">
+        <div class="section-title">Background Context</div>
+        <div class="info-row"><div class="info-key">Career Level</div><div class="info-val">Manager — owns team outcomes</div></div>
+        <div class="info-row"><div class="info-key">Experience Range</div><div class="info-val">6–8 years</div></div>
+        <div class="info-row"><div class="info-key">Current Industry</div><div class="info-val">Fintech</div></div>
+        <div class="info-row"><div class="info-key">Past Industries</div><div class="info-val">SaaS · Consumer Tech</div></div>
+        <div class="info-row" style="border:none;"><div class="info-key">Location</div><div class="info-val">Bangalore · Open to relocation</div></div>
+        <div style="margin-top:10px;font-size:11px;color:var(--muted);font-style:italic;">Company names and institution names revealed only after a call is confirmed on Signal.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- C5: MONTHLY REPORT -->
+<div class="screen" id="c5">
+  <div class="page-header">
+    <div class="flow-badge co">Company Flow · Step 5 of 5</div>
+    <h1 class="page-title">Your hiring intelligence report</h1>
+    <p class="page-sub">Every month you receive a full breakdown of how your hiring is performing — and how it compares to companies hiring for similar roles in your city.</p>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <div>
+      <div style="font-size:13px;color:var(--muted);">Report period</div>
+      <div style="font-size:16px;font-weight:600;color:var(--navy);">November 2025 · Senior Product Manager · Bangalore</div>
+    </div>
+    <span class="tag mint">2 hires confirmed this month</span>
+  </div>
+  <div class="report-grid">
+    <div class="stat-card"><div class="stat-val">78%</div><div class="stat-label">Response Rate</div><div class="stat-delta delta-down">↓ Below median of 86%</div></div>
+    <div class="stat-card"><div class="stat-val">4.8d</div><div class="stat-label">Avg Decision Time</div><div class="stat-delta delta-down">↓ Benchmark 3.2 days</div></div>
+    <div class="stat-card"><div class="stat-val">63%</div><div class="stat-label">Call Acceptance Rate</div><div class="stat-delta delta-up">↑ Median is 58%</div></div>
+    <div class="stat-card"><div class="stat-val">50%</div><div class="stat-label">Call-to-Hire Rate</div><div class="stat-delta delta-up">↑ Peer median 38%</div></div>
+  </div>
+  <div class="grid-2" style="margin-bottom:20px;">
+    <div class="bench-card">
+      <div class="section-title">Rejection Reason Breakdown</div>
+      <div style="margin-top:8px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;"><span style="color:var(--muted);">Salary expectation mismatch</span><span style="font-weight:600;">42%</span></div>
+        <div class="bench-bar-track"><div class="bench-bar-fill" style="width:42%;background:var(--coral);"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0 6px;"><span style="color:var(--muted);">Experience mismatch</span><span style="font-weight:600;">28%</span></div>
+        <div class="bench-bar-track"><div class="bench-bar-fill" style="width:28%;background:var(--amber);"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0 6px;"><span style="color:var(--muted);">Domain / industry mismatch</span><span style="font-weight:600;">18%</span></div>
+        <div class="bench-bar-track"><div class="bench-bar-fill" style="width:18%;background:var(--navy3);"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin:10px 0 6px;"><span style="color:var(--muted);">Thinking profile not aligned</span><span style="font-weight:600;">12%</span></div>
+        <div class="bench-bar-track"><div class="bench-bar-fill" style="width:12%;background:var(--muted);"></div></div>
+      </div>
+    </div>
+    <div class="bench-card">
+      <div class="section-title">Your Company vs. Peer Benchmark</div>
+      <div style="margin-top:8px;">
+        <div style="font-size:12px;color:var(--muted);margin-bottom:4px;">Response Rate</div>
+        <div class="bench-bar-track"><div class="bench-bar-fill" style="width:78%;background:var(--coral);"></div></div>
+        <div class="bench-label-row"><span>You: 78%</span><span>Peer median: 86%</span></div>
+        <div style="font-size:12px;color:var(--muted);margin:12px 0 4px;">Call-to-Hire Conversion</div>
+        <div class="bench-bar-track"><div class="bench-bar-fill" style="width:50%;background:var(--mint);"></div></div>
+        <div class="bench-label-row"><span>You: 50%</span><span>Peer median: 38%</span></div>
+        <div style="font-size:12px;color:var(--muted);margin:12px 0 4px;">Avg Days to First Call</div>
+        <div class="bench-bar-track"><div class="bench-bar-fill" style="width:65%;background:var(--amber);"></div></div>
+        <div class="bench-label-row"><span>You: 6.5 days</span><span>Peer best: 3.1 days</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="insight-box">
+    <div style="font-size:20px;margin-bottom:8px;">💡</div>
+    <div class="insight-title">Signal Insight — November 2025</div>
+    <div class="insight-text">42% of your rejections cite salary mismatch — but your band (₹35–48L) is within the 70th percentile for this role in Bangalore. The issue is likely your <strong>lower floor</strong>. Candidates with 6–8 years of fintech PM experience have a median expectation of ₹40L+. Consider raising your floor to ₹40L. You'd retain access to 68 more profiles in your current pool without changing the upper limit at all.</div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════ CANDIDATE SCREENS ══════════════════════ -->
+
+<!-- P1: BUILD PROFILE -->
+<div class="screen" id="p1">
+  <div class="page-header">
+    <div class="flow-badge ca">Candidate Flow · Step 1 of 5</div>
+    <h1 class="page-title">Build your Signal profile</h1>
+    <p class="page-sub">Takes about 5 minutes. Companies will never see your name, gender, or employer — only what your assessments reveal about how you think, and what you choose to share about your direction.</p>
+  </div>
+  <div class="progress-bar">
+    <div class="prog-step"><div class="prog-dot current">1</div><span class="prog-label current">Basic Info</span></div>
+    <div class="prog-line"></div>
+    <div class="prog-step"><div class="prog-dot todo">2</div><span class="prog-label todo">Intent & Goals</span></div>
+    <div class="prog-line"></div>
+    <div class="prog-step"><div class="prog-dot todo">3</div><span class="prog-label todo">Assessment</span></div>
+  </div>
+  <div class="grid-2" style="gap:20px;">
+    <div class="card">
+      <div class="section-title" style="margin-bottom:16px;">Where are you right now?</div>
+      <div style="margin-bottom:16px;">
+        <div class="label">Employment Status</div>
+        <div class="pill-group">
+          <span class="pill" onclick="togglePillSingle(this,'.status-pill')">Fresher</span>
+          <span class="pill active status-pill" onclick="togglePillSingle(this,'.status-pill')">Employed</span>
+          <span class="pill status-pill" onclick="togglePillSingle(this,'.status-pill')">Between Roles</span>
+          <span class="pill status-pill" onclick="togglePillSingle(this,'.status-pill')">Freelancing</span>
+          <span class="pill status-pill" onclick="togglePillSingle(this,'.status-pill')">Entrepreneur</span>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div class="label">Years of Experience</div>
+        <div class="pill-group">
+          <span class="pill exp-pill" onclick="togglePillSingle(this,'.exp-pill')">No prior exp</span>
+          <span class="pill exp-pill" onclick="togglePillSingle(this,'.exp-pill')">0–2 years</span>
+          <span class="pill exp-pill" onclick="togglePillSingle(this,'.exp-pill')">3–5 years</span>
+          <span class="pill active exp-pill" onclick="togglePillSingle(this,'.exp-pill')">6–8 years</span>
+          <span class="pill exp-pill" onclick="togglePillSingle(this,'.exp-pill')">9–12 years</span>
+          <span class="pill exp-pill" onclick="togglePillSingle(this,'.exp-pill')">12+ years</span>
+        </div>
+      </div>
+      <div>
+        <div class="label">Current Hierarchy Level</div>
+        <div class="hierarchy-grid">
+          <div class="hier-card" onclick="selectHier(this)"><div class="hier-icon">👤</div><div class="hier-title">Individual Contributor</div><div class="hier-desc">No direct reports</div></div>
+          <div class="hier-card" onclick="selectHier(this)"><div class="hier-icon">👥</div><div class="hier-title">Team Lead</div><div class="hier-desc">Guides peers, no formal reports</div></div>
+          <div class="hier-card active" onclick="selectHier(this)"><div class="hier-icon">🏗️</div><div class="hier-title">Manager</div><div class="hier-desc">Has direct reports</div></div>
+          <div class="hier-card" onclick="selectHier(this)"><div class="hier-icon">🏢</div><div class="hier-title">Head of Function</div><div class="hier-desc">Managers report to me</div></div>
+          <div class="hier-card" onclick="selectHier(this)"><div class="hier-icon">🎯</div><div class="hier-title">CXO / Founder</div><div class="hier-desc">Full dept leadership</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:16px;">Your direction</div>
+        <div style="margin-bottom:14px;">
+          <div class="label">Preferred Functions (max 3)</div>
+          <div class="pill-group">
+            <span class="pill active fn-pill" onclick="togglePillMulti(this,'.fn-pill',3)">Product</span>
+            <span class="pill fn-pill" onclick="togglePillMulti(this,'.fn-pill',3)">Tech / Engineering</span>
+            <span class="pill fn-pill" onclick="togglePillMulti(this,'.fn-pill',3)">Strategy & Consulting</span>
+            <span class="pill fn-pill" onclick="togglePillMulti(this,'.fn-pill',3)">Finance</span>
+            <span class="pill fn-pill" onclick="togglePillMulti(this,'.fn-pill',3)">Sales</span>
+            <span class="pill fn-pill" onclick="togglePillMulti(this,'.fn-pill',3)">Marketing</span>
+            <span class="pill fn-pill" onclick="togglePillMulti(this,'.fn-pill',3)">Operations</span>
+            <span class="pill fn-pill" onclick="togglePillMulti(this,'.fn-pill',3)">HR & People</span>
+          </div>
+        </div>
+        <div style="margin-bottom:14px;">
+          <div class="label">Current Industry</div>
+          <select class="field"><option selected>Fintech</option><option>SaaS</option><option>D2C</option><option>Healthtech</option><option>EdTech</option><option>BFSI</option><option>Consulting</option></select>
+        </div>
+        <div>
+          <div class="label">Past Industries (max 3)</div>
+          <div class="pill-group">
+            <span class="pill active ind-pill" onclick="togglePillMulti(this,'.ind-pill',3)">SaaS</span>
+            <span class="pill active ind-pill" onclick="togglePillMulti(this,'.ind-pill',3)">Consumer Tech</span>
+            <span class="pill ind-pill" onclick="togglePillMulti(this,'.ind-pill',3)">BFSI</span>
+            <span class="pill ind-pill" onclick="togglePillMulti(this,'.ind-pill',3)">D2C</span>
+            <span class="pill ind-pill" onclick="togglePillMulti(this,'.ind-pill',3)">Consulting</span>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-title" style="margin-bottom:14px;">Tools & Skills</div>
+        <div style="margin-bottom:10px;">
+          <div class="label" style="margin-bottom:6px;">Mark what you know</div>
+          <div class="pill-group">
+            <span class="pill active sk-pill" onclick="togglePill(this)">SQL</span>
+            <span class="pill sk-pill" onclick="togglePill(this)">Python</span>
+            <span class="pill active sk-pill" onclick="togglePill(this)">Figma</span>
+            <span class="pill active sk-pill" onclick="togglePill(this)">Mixpanel</span>
+            <span class="pill sk-pill" onclick="togglePill(this)">Excel / Sheets</span>
+            <span class="pill sk-pill" onclick="togglePill(this)">Tableau</span>
+            <span class="pill sk-pill" onclick="togglePill(this)">JIRA</span>
+            <span class="pill sk-pill" onclick="togglePill(this)">HubSpot</span>
+          </div>
+        </div>
+        <div style="background:var(--amber-lt);border-radius:10px;padding:10px 14px;font-size:12px;color:var(--amber);line-height:1.6;">
+          🔒 Skills you mark here show as <strong>Unverified</strong> until you complete Signal's timed tool test. Companies see both — verified tags rank you higher in their pools.
+        </div>
+      </div>
+      <div class="card">
+        <div class="section-title" style="margin-bottom:14px;">Location</div>
+        <div style="margin-bottom:14px;">
+          <div class="label">Your City</div>
+          <select class="field"><option selected>Bangalore</option><option>Mumbai</option><option>Delhi</option><option>Hyderabad</option><option>Pune</option><option>Chennai</option></select>
+        </div>
+        <div>
+          <div class="label">Open to Relocation?</div>
+          <div class="pill-group">
+            <span class="pill active" onclick="togglePillSingle(this,'.reloc-pill')">Yes, open to relocate</span>
+            <span class="pill reloc-pill" onclick="togglePillSingle(this,'.reloc-pill')">No, staying put</span>
+            <span class="pill reloc-pill" onclick="togglePillSingle(this,'.reloc-pill')">Open to discussion</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P2: INTENT FORM -->
+<div class="screen" id="p2">
+  <div class="page-header">
+    <div class="flow-badge ca">Candidate Flow · Step 2 of 5</div>
+    <h1 class="page-title">Share your intent — in your own words</h1>
+    <p class="page-sub">Companies read exactly what you write before deciding whether to request a call. Be honest. Be specific. This is your first impression, not a resume section.</p>
+  </div>
+  <div class="lock-banner">
+    <div class="lock-icon">🔒</div>
+    <div class="lock-text"><strong>30-day commitment.</strong> Answers are locked for 30 days once submitted. This signals genuine intent and prevents gaming. You can mark yourself unavailable anytime — but your written answers stay until you refresh.</div>
+  </div>
+  <div class="grid-2" style="gap:16px;">
+    <div>
+      <div class="intent-q">
+        <div class="q-label">What kind of role are you actually targeting?</div>
+        <textarea>I'm looking for a Senior PM or Group PM role — ideally in a company building B2B infrastructure or financial products. I want to be in a seat where I'm making architectural product decisions, not just writing specs.</textarea>
+        <div class="q-hint">Companies see this before deciding to call you.</div>
+      </div>
+      <div class="intent-q">
+        <div class="q-label">Why are you open to a change right now?</div>
+        <textarea>I've built and scaled the core payments product from 0 to 4M users. The architecture decisions are made and the team runs well. I want a problem that isn't solved yet — preferably one where product and engineering are genuinely co-owners of the roadmap.</textarea>
+        <div class="q-hint">Be honest — this is often the most useful signal for a hiring team.</div>
+      </div>
+      <div class="intent-q">
+        <div class="q-label">What are your absolute deal-breakers?</div>
+        <textarea>Roles where product is a project management function rather than a decision-making seat. Micromanagement. Companies that ship by consensus and call it collaboration. Comp below ₹38L.</textarea>
+      </div>
+    </div>
+    <div>
+      <div class="intent-q">
+        <div class="q-label">What does a great work environment look like to you?</div>
+        <textarea>Small teams that move fast. Direct access to leadership. An engineering team that's curious, not just executional. Hybrid — I work well remotely but I want to be in the room for design sessions and strategy conversations.</textarea>
+      </div>
+      <div class="intent-q">
+        <div class="q-label">How do you define success in a new role — 12 months in?</div>
+        <textarea>I've shipped something that materially changed a business metric. I've built trust with the engineering team. And I've expanded what the company thought was possible with the product — not just delivered what was asked.</textarea>
+      </div>
+      <div class="card card-sm" style="background:var(--surface2);">
+        <div class="section-title">Compensation & Timeline</div>
+        <div class="info-row">
+          <div class="info-key">Expected CTC range</div>
+          <div class="info-val" style="display:flex;gap:8px;align-items:center;">
+            <input type="text" class="field" value="₹ 38" style="width:70px;padding:6px 10px;">
+            <span style="font-size:12px;color:var(--muted);">–</span>
+            <input type="text" class="field" value="₹ 46" style="width:70px;padding:6px 10px;">
+            <span style="font-size:12px;color:var(--muted);">LPA</span>
+          </div>
+        </div>
+        <div class="info-row">
+          <div class="info-key">Available in</div>
+          <div class="info-val">
+            <select class="field" style="padding:6px 10px;width:auto;"><option selected>30–45 days</option><option>Immediately</option><option>60 days</option><option>90 days</option></select>
+          </div>
+        </div>
+        <div class="info-row" style="border:none;">
+          <div class="info-key">Preferred work mode</div>
+          <div class="info-val">
+            <div class="pill-group" style="justify-content:flex-end;">
+              <span class="pill active" style="padding:5px 12px;font-size:11px;">Hybrid</span>
+              <span class="pill" style="padding:5px 12px;font-size:11px;">Remote</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P3: ASSESSMENT -->
+<div class="screen" id="p3">
+  <div class="page-header">
+    <div class="flow-badge ca">Candidate Flow · Step 3 of 5</div>
+    <h1 class="page-title">Skill Assessment</h1>
+    <p class="page-sub">4 case studies. Each tests a different thinking dimension. Questions rotate — there are no model answers. Your thought process matters more than your conclusion.</p>
+  </div>
+  <div class="timer-bar">
+    <div class="timer-left">
+      <div>
+        <div class="timer-label">Time Remaining</div>
+        <div class="timer-val" id="timerDisplay">18:43</div>
+      </div>
+      <div style="width:1px;height:40px;background:rgba(255,255,255,.15);"></div>
+      <div>
+        <div class="timer-label">Question</div>
+        <div style="font-size:22px;font-weight:700;color:#fff;">2 of 4</div>
+      </div>
+    </div>
+    <div>
+      <div class="timer-label">Dimensions</div>
+      <div style="display:flex;gap:6px;margin-top:4px;">
+        <span style="padding:3px 10px;border-radius:12px;background:rgba(255,255,255,.15);font-size:11px;color:#fff;">Problem Solving</span>
+        <span style="padding:3px 10px;border-radius:12px;background:rgba(255,255,255,.15);font-size:11px;color:#fff;">First Principles</span>
+      </div>
+    </div>
+  </div>
+  <div style="height:4px;background:rgba(27,45,79,.12);border-radius:10px;overflow:hidden;margin-bottom:20px;">
+    <div id="timerProg" style="height:100%;width:62%;background:var(--amber);border-radius:10px;transition:width 1s linear;"></div>
+  </div>
+  <div class="case-card">
+    <div class="dim-badge">📊 Problem Solving + First Principle Thinking</div>
+    <div class="label" style="margin-bottom:8px;">Scenario</div>
+    <div class="case-scenario">You are the Product Manager at an early-stage fintech startup. Your payment success rate has dropped from 94% to 87% over the past 2 weeks. The engineering team confirms there have been no code deployments. Your support volume is up 23%. A competitor launched a new product 10 days ago. What do you do, and why?</div>
+    <div class="keystroke-note">⌨️ &nbsp;Keystroke input only — copy/paste and voice input are disabled for this section. Your typing pattern is part of the integrity check.</div>
+    <textarea class="answer-area" id="answerArea" placeholder="Think through this step by step. There's no single right answer — we're looking at how you reason, what questions you ask first, and how you structure your thinking under uncertainty.
+
+Start typing here..."></textarea>
+    <div class="word-count" id="wordCount">0 words · Aim for 150–300 words</div>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-size:12px;color:var(--muted);">⚠️ This question cannot be paused. Timer continues if you leave this page.</div>
+    <button class="btn btn-navy" onclick="alert('Answer submitted! Loading question 3 of 4...')">Submit & Next →</button>
+  </div>
+</div>
+
+<!-- P4: DASHBOARD -->
+<div class="screen" id="p4">
+  <div class="page-header">
+    <div class="flow-badge ca">Candidate Flow · Step 4 of 5</div>
+    <h1 class="page-title">Your Signal dashboard</h1>
+    <p class="page-sub">See your profile strength, track companies evaluating you anonymously, and manage call invites — all from one place.</p>
+  </div>
+  <div class="dash-layout">
+    <div>
+      <div class="card" style="margin-bottom:16px;text-align:center;">
+        <div class="profile-score-ring">
+          <svg class="ring-svg" width="100" height="100" viewBox="0 0 100 100">
+            <circle class="ring-bg" cx="50" cy="50" r="42"/>
+            <circle class="ring-fill" cx="50" cy="50" r="42"/>
+          </svg>
+          <div class="ring-text"><div class="ring-pct">80%</div><div class="ring-sub">Complete</div></div>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px;">Profile Strength</div>
+        <div style="font-size:11px;color:var(--muted);">Strong · Active in 312 pools</div>
+        <div class="divider"></div>
+        <div style="font-size:11px;color:var(--amber);background:var(--amber-lt);border-radius:8px;padding:8px 12px;">🔒 Answers refresh in <strong>12 days</strong></div>
+      </div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="section-title">Your Thinking Profile</div>
+        <div class="score-bar-row" style="margin-bottom:8px;"><div class="score-bar-label" style="font-size:11px;width:120px;">Problem Solving</div><div class="score-bar-track"><div class="score-bar-fill high" style="width:92%;"></div></div></div>
+        <div class="score-bar-row" style="margin-bottom:8px;"><div class="score-bar-label" style="font-size:11px;width:120px;">Curiosity</div><div class="score-bar-track"><div class="score-bar-fill high" style="width:95%;"></div></div></div>
+        <div class="score-bar-row" style="margin-bottom:8px;"><div class="score-bar-label" style="font-size:11px;width:120px;">First Principles</div><div class="score-bar-track"><div class="score-bar-fill high" style="width:88%;"></div></div></div>
+        <div class="score-bar-row" style="margin-bottom:8px;"><div class="score-bar-label" style="font-size:11px;width:120px;">Communication</div><div class="score-bar-track"><div class="score-bar-fill med" style="width:80%;"></div></div></div>
+        <div class="score-bar-row" style="margin-bottom:0;"><div class="score-bar-label" style="font-size:11px;width:120px;">Decision Making</div><div class="score-bar-track"><div class="score-bar-fill med" style="width:74%;"></div></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:10px;font-style:italic;">Top 18% in Problem Solving among Product professionals.</div>
+      </div>
+      <div class="card">
+        <div class="section-title">Verified Tools</div>
+        <div class="pill-group">
+          <span class="tag verified">✓ SQL</span>
+          <span class="tag verified">✓ Figma</span>
+          <span class="tag verified">✓ Mixpanel</span>
+          <span class="tag unverified">Python</span>
+          <span class="tag unverified">Excel</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-top:8px;">Unverified skills can be tested — add a verified badge to rank higher in company pools.</div>
+      </div>
+    </div>
+    <div>
+      <div class="tab-bar">
+        <div class="tab active" onclick="switchTab(this,'tab-profile')">My Profile</div>
+        <div class="tab" onclick="switchTab(this,'tab-companies')">Companies Interested <span class="notif-dot">3</span></div>
+      </div>
+      <div class="tab-content active" id="tab-profile">
+        <div class="card">
+          <div class="section-title">Your Intent Snapshot · Locked 8 days ago</div>
+          <div class="info-row"><div class="info-key">Openness</div><div class="info-val"><span class="tag coral">Actively looking</span></div></div>
+          <div class="info-row"><div class="info-key">Target Role</div><div class="info-val">Senior PM · Group PM</div></div>
+          <div class="info-row"><div class="info-key">Target Industry</div><div class="info-val">Fintech · SaaS</div></div>
+          <div class="info-row"><div class="info-key">Expected CTC</div><div class="info-val">₹38–46 LPA</div></div>
+          <div class="info-row"><div class="info-key">Available in</div><div class="info-val">30–45 days</div></div>
+          <div class="info-row" style="border:none;"><div class="info-key">Work Mode</div><div class="info-val">Hybrid preferred</div></div>
+        </div>
+      </div>
+      <div class="tab-content" id="tab-companies">
+        <div class="company-eval-card active-call">
+          <div class="eval-header">
+            <div><div class="eval-co">Series B · Fintech · 80–150 employees · Bangalore</div><div class="eval-role">Senior Product Manager — Platform</div></div>
+            <span class="tag mint">📞 Call Requested!</span>
+          </div>
+          <div style="font-size:12px;color:var(--navy2);line-height:1.6;margin-bottom:10px;">They've reviewed your full profile — assessments, intent, skills — and want to speak. Comp: ₹38–48 LPA · Hybrid · Join in 30 days.</div>
+          <button class="btn btn-mint" onclick="goToScreen('candidate',4)" style="font-size:12px;padding:8px 18px;">View Invite & Respond →</button>
+        </div>
+        <div class="company-eval-card">
+          <div class="eval-header">
+            <div><div class="eval-co">Series A · SaaS · 40–80 employees · Bangalore</div><div class="eval-role">Product Manager — Growth</div></div>
+            <span class="tag amber">Evaluating</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">They've opened your profile and are reviewing your assessments and intent snapshot.</div>
+          <div class="eval-timer" style="margin-top:6px;">⏱ Decision expected by Dec 14</div>
+        </div>
+        <div class="company-eval-card">
+          <div class="eval-header">
+            <div><div class="eval-co">Series C · Consumer Tech · 200–500 employees · Bangalore</div><div class="eval-role">Group Product Manager</div></div>
+            <span class="tag navy">Evaluating</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted);line-height:1.6;">Your profile was added to their queue 2 days ago.</div>
+          <div class="eval-timer" style="margin-top:6px;">⏱ Decision expected by Dec 18</div>
+        </div>
+        <div style="margin-top:14px;font-size:12px;color:var(--muted);background:var(--surface2);border-radius:10px;padding:14px;line-height:1.6;">
+          🔒 <strong>Company identities are anonymous</strong> until a call is confirmed. You'll see the full company name and details only then.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P5: CALL INVITE -->
+<div class="screen" id="p5">
+  <div class="page-header">
+    <div class="flow-badge ca">Candidate Flow · Step 5 of 5</div>
+    <h1 class="page-title">A company wants to connect with you</h1>
+    <p class="page-sub">They've reviewed your assessments, intent answers, and profile — and want to speak. All scheduling happens on Signal. Their identity is revealed once you accept.</p>
+  </div>
+  <div class="invite-card">
+    <div class="invite-header">
+      <div class="tag-row">
+        <span class="invite-co-tag">Series B · Fintech</span>
+        <span class="invite-co-tag">80–150 employees</span>
+        <span class="invite-co-tag">Bangalore · Hybrid</span>
+      </div>
+      <div class="invite-title">Senior Product Manager — Platform</div>
+      <div class="invite-sub">₹38–48 LPA · Joining in 30 days · Hybrid 3 days/week</div>
+    </div>
+    <div class="invite-body">
+      <div class="label" style="margin-bottom:8px;">What this role involves</div>
+      <div class="jd-snippet">"We're building the infrastructure layer that India's next wave of payment products will run on. You'll be the first PM working directly with our founding engineering team — defining what we build and why. This is not a coordination role. We need someone who can originate product thinking and is comfortable with deep technical conversations."</div>
+      <div style="background:var(--surface2);border-radius:10px;padding:12px 16px;margin-bottom:14px;">
+        <div class="label" style="margin-bottom:8px;">First 30 days</div>
+        <div style="font-size:12px;color:var(--navy);line-height:1.6;">Onboard to the platform product — understand architecture, team dynamics, and live metrics. No deliverables expected. Shadow key decisions.</div>
+      </div>
+      <div class="divider"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--navy);margin:16px 0 10px;">Select a time slot for the first call</div>
+      <div class="slot-grid">
+        <div class="slot-card selected" onclick="selectSlot(this)"><div class="slot-day">Mon, Dec 16</div><div class="slot-time">10:00 AM · 45 min</div></div>
+        <div class="slot-card" onclick="selectSlot(this)"><div class="slot-day">Tue, Dec 17</div><div class="slot-time">3:00 PM · 45 min</div></div>
+        <div class="slot-card" onclick="selectSlot(this)"><div class="slot-day">Wed, Dec 18</div><div class="slot-time">11:30 AM · 45 min</div></div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:8px;">None of these work? You can propose a custom time after accepting.</div>
+      <div class="invite-actions">
+        <button class="btn btn-mint btn-lg" style="flex:1;" id="acceptBtn" onclick="alert('✅ Call confirmed! The company name and contact details are now visible. A calendar invite has been sent to both sides.')">✓ &nbsp;Accept — Dec 16, 10:00 AM</button>
+        <button class="btn btn-ghost" onclick="toggleDecline()">Decline</button>
+      </div>
+      <div class="decline-reason" id="declineReason">
+        <div style="font-size:13px;font-weight:600;color:var(--navy);margin-bottom:8px;">Why are you declining?</div>
+        <select style="width:100%;padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);font-family:var(--ff-body);font-size:13px;background:var(--surface);margin-bottom:10px;">
+          <option value="">Select a reason</option>
+          <option>Compensation doesn't match my expectations</option>
+          <option>Role type doesn't match what I'm looking for</option>
+          <option>Company stage isn't right for me</option>
+          <option>Already accepted another offer</option>
+          <option>Work mode doesn't work for me</option>
+          <option>Joining timeline doesn't work</option>
+        </select>
+        <button class="btn btn-ghost" onclick="alert('Decline recorded. The company has been notified.')" style="width:100%;justify-content:center;">Confirm Decline</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end .main -->
+
+<!-- BOTTOM NAV -->
+<div class="botnav">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)">← Previous</button>
+  <div class="step-counter" id="stepCounter"></div>
+  <button class="nav-btn primary" id="nextBtn" onclick="navigate(1)">Next →</button>
+</div>
+
+<!-- CALL MODAL -->
+<div class="modal-overlay" id="callModal">
+  <div class="modal">
+    <div class="modal-title">Request a call with MOON GUARD?</div>
+    <div class="modal-sub">The candidate will see your company category, role type, comp band, responsibilities, and 30-60-90 roadmap — but not your company name. That's revealed after they accept the call.</div>
+    <div style="background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div class="info-row"><div class="info-key">Candidate sees</div><div class="info-val">Series B Fintech · Senior PM · ₹35–48L · Role responsibilities + 30-60-90</div></div>
+      <div class="info-row" style="border:none;"><div class="info-key">Still hidden</div><div class="info-val">Company name, team details, identity</div></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-primary" onclick="closeCallModal()" style="flex:1;">Send Call Request →</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('callModal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- REJECT MODAL -->
+<div class="modal-overlay" id="rejectModal">
+  <div class="modal">
+    <div class="modal-title">Mark MOON GUARD as not a fit</div>
+    <div class="modal-sub">A rejection reason is required. This improves future pool matches for your roles and is shared with candidates in aggregated form only — never attributed to a specific company.</div>
+    <div style="margin-bottom:16px;">
+      <div class="label" style="margin-bottom:8px;">Reason for rejection</div>
+      <div class="pill-group">
+        <span class="pill rej-pill" onclick="togglePillSingle(this,'.rej-pill')">Salary expectation too high</span>
+        <span class="pill rej-pill" onclick="togglePillSingle(this,'.rej-pill')">Experience range mismatch</span>
+        <span class="pill active rej-pill" onclick="togglePillSingle(this,'.rej-pill')">Domain doesn't match</span>
+        <span class="pill rej-pill" onclick="togglePillSingle(this,'.rej-pill')">Seniority not right</span>
+        <span class="pill rej-pill" onclick="togglePillSingle(this,'.rej-pill')">Availability / timeline</span>
+        <span class="pill rej-pill" onclick="togglePillSingle(this,'.rej-pill')">Thinking profile not aligned</span>
+        <span class="pill rej-pill" onclick="togglePillSingle(this,'.rej-pill')">Required tool skills missing</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-ghost" style="flex:1;" onclick="closeRejectModal()">Confirm Rejection</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('rejectModal').classList.remove('open')">Cancel</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-top:12px;text-align:center;">This slot reopens immediately after confirmation.</div>
+  </div>
+</div>
+
+<!-- SHORTLIST REJECT MODAL -->
+<div class="modal-overlay" id="shortlistRejectModal">
+  <div class="modal">
+    <div class="modal-title" id="slRejectTitle">Reject candidate from process</div>
+    <div class="modal-sub">This candidate has been through one or more interview rounds. A reason is required and will be reflected in your monthly report.</div>
+    <div style="margin-bottom:16px;">
+      <div class="label" style="margin-bottom:8px;">Stage reached</div>
+      <select class="field" style="margin-bottom:12px;"><option>1st Round</option><option selected>2nd Round Interview</option><option>Assignment / Case Study</option><option>Final Round</option></select>
+      <div class="label" style="margin-bottom:8px;">Rejection reason</div>
+      <div class="pill-group">
+        <span class="pill sr-pill" onclick="togglePillSingle(this,'.sr-pill')">Compensation gap</span>
+        <span class="pill sr-pill active" onclick="togglePillSingle(this,'.sr-pill')">Technical depth insufficient</span>
+        <span class="pill sr-pill" onclick="togglePillSingle(this,'.sr-pill')">Culture / values mismatch</span>
+        <span class="pill sr-pill" onclick="togglePillSingle(this,'.sr-pill')">Seniority not aligned</span>
+        <span class="pill sr-pill" onclick="togglePillSingle(this,'.sr-pill')">Candidate withdrew</span>
+        <span class="pill sr-pill" onclick="togglePillSingle(this,'.sr-pill')">Role requirements changed</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn btn-red" style="flex:1;" onclick="document.getElementById('shortlistRejectModal').classList.remove('open');alert('Rejection logged. Candidate has been notified via Signal that they were not progressed further.')">Confirm Rejection</button>
+      <button class="btn btn-ghost" onclick="document.getElementById('shortlistRejectModal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FLOWS={
+  company:{steps:['Post a Role','Build Pool','Active Queue','Evaluate Profile','Monthly Report'],screens:['c1','c2','c3','c4','c5']},
+  candidate:{steps:['Build Profile','Intent Form','Assessment','Dashboard','Call Invite'],screens:['p1','p2','p3','p4','p5']}
+};
+let currentFlow='company',currentStep=0,timerInterval=null,timerSecs=1123;
+
+function init(){renderStepBar();showScreen();updateNav();}
+
+function renderStepBar(){
+  const flow=FLOWS[currentFlow];
+  let html='';
+  flow.steps.forEach((s,i)=>{
+    const cls=i===currentStep?'active':i<currentStep?'done':'';
+    const icon=i<currentStep?'✓':i+1;
+    html+=`<div class="step-item ${cls}" onclick="goToScreen('${currentFlow}',${i})"><div class="step-dot">${icon}</div><span class="step-label">${s}</span></div>`;
+    if(i<flow.steps.length-1)html+='<div class="step-sep"></div>';
+  });
+  document.getElementById('stepbar').innerHTML=html;
+}
+
+function showScreen(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const id=FLOWS[currentFlow].screens[currentStep];
+  const el=document.getElementById(id);
+  if(el){el.classList.add('active');}
+  document.querySelector('.main').scrollTo({top:0,behavior:'instant'});
+  if(id==='p3'){startTimer();}else{stopTimer();}
+  setTimeout(()=>{
+    document.querySelectorAll('.score-bar-fill').forEach(b=>{const w=b.style.width;b.style.width='0';setTimeout(()=>b.style.width=w,50);});
+  },100);
+}
+
+function updateNav(){
+  const total=FLOWS[currentFlow].steps.length;
+  document.getElementById('prevBtn').disabled=currentStep===0;
+  document.getElementById('nextBtn').disabled=currentStep===total-1;
+  document.getElementById('stepCounter').innerHTML=`<strong>${currentStep+1}</strong> of ${total} — ${FLOWS[currentFlow].steps[currentStep]}`;
+  document.querySelectorAll('.toggle-btn').forEach(b=>b.classList.remove('active'));
+  const btns=document.querySelectorAll('.toggle-btn');
+  if(currentFlow==='company')btns[0].classList.add('active');
+  else btns[1].classList.add('active');
+}
+
+function navigate(dir){
+  const total=FLOWS[currentFlow].steps.length;
+  currentStep=Math.max(0,Math.min(total-1,currentStep+dir));
+  renderStepBar();showScreen();updateNav();
+}
+
+function goToScreen(flow,step){currentFlow=flow;currentStep=step;renderStepBar();showScreen();updateNav();}
+function switchFlow(flow){currentFlow=flow;currentStep=0;renderStepBar();showScreen();updateNav();}
+
+function startTimer(){
+  stopTimer();
+  timerInterval=setInterval(()=>{
+    if(timerSecs>0)timerSecs--;
+    const m=Math.floor(timerSecs/60).toString().padStart(2,'0');
+    const s=(timerSecs%60).toString().padStart(2,'0');
+    const el=document.getElementById('timerDisplay');
+    const pg=document.getElementById('timerProg');
+    if(el)el.textContent=`${m}:${s}`;
+    if(pg)pg.style.width=((timerSecs/1200)*100)+'%';
+    if(timerSecs<120&&el)el.style.color='#E07B54';
+  },1000);
+}
+function stopTimer(){if(timerInterval){clearInterval(timerInterval);timerInterval=null;}}
+
+document.addEventListener('input',function(e){
+  if(e.target.id==='answerArea'){
+    const words=e.target.value.trim().split(/\s+/).filter(w=>w.length).length;
+    const el=document.getElementById('wordCount');
+    if(el)el.textContent=`${words} words · Aim for 150–300 words`;
+  }
+});
+document.addEventListener('paste',function(e){if(e.target.id==='answerArea')e.preventDefault();});
+
+function togglePill(el){el.classList.toggle('active');}
+function togglePillSingle(el,cls){document.querySelectorAll(cls).forEach(p=>p.classList.remove('active'));el.classList.add('active');}
+function togglePillMulti(el,cls,max){
+  const active=document.querySelectorAll(cls+'.active');
+  if(el.classList.contains('active')){el.classList.remove('active');return;}
+  if(active.length>=max){el.style.borderColor='var(--coral)';setTimeout(()=>el.style.borderColor='',600);return;}
+  el.classList.add('active');
+}
+function selectHier(el){document.querySelectorAll('.hier-card').forEach(c=>c.classList.remove('active'));el.classList.add('active');}
+
+function switchTab(el,contentId){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(contentId).classList.add('active');
+}
+
+function switchQTab(el,contentId){
+  document.querySelectorAll('.qtab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.qtab-content').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(contentId).classList.add('active');
+}
+
+function showCallModal(){document.getElementById('callModal').classList.add('open');}
+function closeCallModal(){
+  document.getElementById('callModal').classList.remove('open');
+  alert('✅ Call request sent to MOON GUARD! They\'ll respond within 48 hours with a time slot. This slot remains occupied until the call is completed and you log a post-call decision.');
+}
+function showRejectModal(){document.getElementById('rejectModal').classList.add('open');}
+function closeRejectModal(){
+  document.getElementById('rejectModal').classList.remove('open');
+  alert('Rejection logged. MOON GUARD has been notified (aggregated reason only, company identity not revealed). This slot is now open — fetch your next profile when ready.');
+}
+function showShortlistReject(name){
+  document.getElementById('slRejectTitle').textContent='Reject '+name+' from process';
+  document.getElementById('shortlistRejectModal').classList.add('open');
+}
+function showPoolLocked(){document.getElementById('pool-locked-msg').style.display='flex';}
+function selectSlot(el){
+  document.querySelectorAll('.slot-card').forEach(s=>s.classList.remove('selected'));
+  el.classList.add('selected');
+  const day=el.querySelector('.slot-day').textContent;
+  const time=el.querySelector('.slot-time').textContent.split('·')[0].trim();
+  document.getElementById('acceptBtn').textContent=`✓  Accept — ${day}, ${time}`;
+}
+function toggleDecline(){document.getElementById('declineReason').classList.toggle('show');}
+
+document.addEventListener('keydown',function(e){
+  if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'||e.target.tagName==='SELECT')return;
+  if(e.key==='ArrowRight')navigate(1);
+  if(e.key==='ArrowLeft')navigate(-1);
+});
+
+init();
+</script>
+</body>
+</html>
